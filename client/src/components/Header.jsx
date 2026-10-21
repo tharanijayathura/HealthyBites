@@ -42,9 +42,9 @@ export default function Header() {
           <NavLink to="/menu" className={({ isActive }) => isActive ? 'active' : ''}>
             Weekly Menu
           </NavLink>
-          <a href="/#how-it-works" onClick={() => setMobileOpen(false)}>
+          <NavLink to="/how-it-works" className={({ isActive }) => isActive ? 'active' : ''}>
             How It Works
-          </a>
+          </NavLink>
           <NavLink to="/about" className={({ isActive }) => isActive ? 'active' : ''}>
             About Us
           </NavLink>
@@ -81,9 +81,9 @@ export default function Header() {
           <NavLink to="/menu" className={({ isActive }) => isActive ? 'active' : ''}>
             Weekly Menu
           </NavLink>
-          <a href="/#how-it-works" onClick={() => setMobileOpen(false)}>
+          <NavLink to="/how-it-works" className={({ isActive }) => isActive ? 'active' : ''}>
             How It Works
-          </a>
+          </NavLink>
           <NavLink to="/about" className={({ isActive }) => isActive ? 'active' : ''}>
             About Us
           </NavLink>

@@ -127,9 +127,9 @@ export default function Home() {
               <Link to="/menu" className="btn btn-primary btn-lg">
                 Explore This Week's Menu <ArrowRight size={19} />
               </Link>
-              <a href="#how-it-works" className="btn btn-outline btn-lg">
+              <Link to="/how-it-works" className="btn btn-outline btn-lg">
                 How It Works
-              </a>
+              </Link>
             </div>
 
             {/* Quick Hero Metrics */}

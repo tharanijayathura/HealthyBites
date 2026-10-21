@@ -30,7 +30,7 @@ export default function Footer() {
           <div className="footer-links-list">
             <Link to="/">Home</Link>
             <Link to="/menu">Weekly Meal Menu</Link>
-            <a href="/#how-it-works">How Ordering Works</a>
+            <Link to="/how-it-works">How Ordering Works</Link>
             <Link to="/about">About Healy Bite</Link>
             <Link to="/cart">Your Shopping Cart</Link>
             <Link to="/contact">Help &amp; Support</Link>
