@@ -1,0 +1,13 @@
+{
+  "name": "healy-bite-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "dev": "concurrently -n CLIENT,SERVER -c green,blue \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
+    "build": "npm run build --prefix client",
+    "check": "node --check server/src/server.js && node --check server/src/app.js"
+  },
+  "devDependencies": {"concurrently": "^9.2.1"},
+  "engines": {"node": ">=22.12.0"}
+}
