@@ -1,17 +1,34 @@
 import { useState } from 'react';
-import { Plus, Eye, Flame, Dumbbell } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Plus, Eye, Flame, Dumbbell, Lock } from 'lucide-react';
 import { money } from '../utils/money';
 import { formatDate } from '../utils/dates';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import MealDetailModal from './MealDetailModal';
 
 export default function MealCard({ meal, deliveryDate }) {
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleAdd = (e) => {
     e.stopPropagation();
     if (meal.isSoldOut) return;
+
+    // Only logged-in users can order food
+    if (!user) {
+      navigate('/login', {
+        state: {
+          from: location.pathname + location.search,
+          message: 'Please sign in to your Healy Bite account to add meals and place your order.'
+        }
+      });
+      return;
+    }
+
     addItem(meal, deliveryDate);
   };
 
@@ -86,9 +103,19 @@ export default function MealCard({ meal, deliveryDate }) {
                 onClick={handleAdd}
                 disabled={meal.isSoldOut}
                 aria-label={`Add ${meal.name} to cart`}
+                title={!user ? 'Sign in to order' : `Add ${meal.name}`}
               >
-                <Plus size={16} />
-                <span>{meal.isSoldOut ? 'Sold Out' : 'Add'}</span>
+                {!user ? (
+                  <>
+                    <Lock size={14} />
+                    <span>Order</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus size={16} />
+                    <span>{meal.isSoldOut ? 'Sold Out' : 'Add'}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

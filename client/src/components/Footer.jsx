@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Leaf, Mail, Phone, MessageCircle, MapPin, Clock, ShieldCheck } from 'lucide-react';
+import { Mail, Phone, MessageCircle, MapPin, Clock, ShieldCheck } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 
 export default function Footer() {
   return (
@@ -7,14 +8,7 @@ export default function Footer() {
       <div className="container footer-main-grid">
         {/* Column 1: Brand Info */}
         <div className="footer-col">
-          <Link to="/" className="brand-logo mb-4 inline-flex">
-            <div className="brand-icon-box">
-              <Leaf size={20} className="text-[#6C8C17]" />
-            </div>
-            <span>
-              Healy<span className="brand-leaf">Bite.</span>
-            </span>
-          </Link>
+          <BrandLogo className="mb-4" />
           <p className="mb-4">
             Fuel Your Fitness. Nourish Your Body. Freshly prepared, protein-dense meals designed specifically for athletes, gym-goers, and active individuals in Colombo.
           </p>

@@ -73,6 +73,8 @@ CLIENT_ORIGIN=http://localhost:5173
 JWT_SECRET=your_32_character_random_jwt_secret
 ADMIN_EMAIL=healthyxxxbites@gmail.com
 ADMIN_PASSWORD=your_strong_admin_password
+# Required when registering additional admin accounts after the first one:
+ADMIN_REGISTRATION_KEY=your_private_admin_invitation_key
 ```
 
 **Client (`client/.env`):**
@@ -91,9 +93,14 @@ npm run install:all
 # Seed 7 premium gym meals with photos, macros & default business settings:
 npm run seed --prefix server
 
-# Create the initial admin account:
+# Create the initial super-admin account:
 npm run admin:create --prefix server
 ```
+
+The first administrator can also be created at `/admin/register`. Once an administrator
+exists, additional administrator registrations require the private `ADMIN_REGISTRATION_KEY`
+environment variable and must be approved by the super-admin in the Admin Team tab.
+Never expose this key in the client application.
 
 ### 5. Start Development Servers
 Run both frontend and backend concurrently:

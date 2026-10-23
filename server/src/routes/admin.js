@@ -3,43 +3,237 @@ import { rateLimit } from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import Admin from '../models/Admin.js';
 import Meal, { DAYS, CATEGORIES } from '../models/Meal.js';
 import Order from '../models/Order.js';
 import Setting from '../models/Setting.js';
+import User from '../models/User.js';
 import { requireAdmin } from '../middleware/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.join(__dirname, '../../../client/public/images/uploads');
+
+// Ensure upload directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const cleanName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    cb(null, `meal_${Date.now()}_${cleanName}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/image\/(jpeg|jpg|png|webp|gif)/i.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG, WEBP and GIF image formats are allowed.'));
+    }
+  }
+});
 
 const router = Router();
 const asyncRoute = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 12, standardHeaders: 'draft-8', legacyHeaders: false });
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 15, standardHeaders: 'draft-8', legacyHeaders: false });
 const cookieOptions = { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/api', maxAge: 8 * 60 * 60 * 1000 };
 
+// 1. Admin Login
 router.post('/login', loginLimiter, asyncRoute(async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
   const admin = await Admin.findOne({ email });
+  if (admin?.status === 'pending') {
+    return res.status(403).json({ message: 'Your administrator account is awaiting super-admin approval.' });
+  }
   if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) {
     return res.status(401).json({ message: 'Invalid admin credentials' });
   }
-  const token = jwt.sign({ id: String(admin._id), role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h', algorithm: 'HS256' });
-  res.cookie('hb_admin', token, cookieOptions).json({ email: admin.email });
+
+  // Update last login
+  admin.lastLogin = new Date();
+  await admin.save();
+
+  const token = jwt.sign(
+    { id: String(admin._id), role: admin.role || 'admin' },
+    process.env.JWT_SECRET,
+    { expiresIn: '8h', algorithm: 'HS256' }
+  );
+
+  res.cookie('hb_admin', token, cookieOptions).json({
+    email: admin.email,
+    name: admin.name || 'Administrator',
+    role: admin.role || 'admin'
+  });
 }));
 
+// 2. Admin Registration (First-time setup OR with invitation key)
+router.post('/register', loginLimiter, asyncRoute(async (req, res) => {
+  const name = String(req.body?.name || '').trim() || 'Admin';
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
+  const inviteCode = String(req.body?.inviteCode || '').trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'Valid email address is required' });
+  }
+  if (!password || password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+  }
+
+  const existingCount = await Admin.countDocuments();
+  const masterKey = process.env.ADMIN_REGISTRATION_KEY || 'HEALY_ADMIN_2026';
+  const isAutoApproved = existingCount === 0 || (inviteCode && inviteCode === masterKey);
+
+  const alreadyRegistered = await Admin.findOne({ email });
+  if (alreadyRegistered) {
+    return res.status(409).json({ message: 'An admin account with this email already exists' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const admin = await Admin.create({
+    name,
+    email,
+    passwordHash,
+    role: existingCount === 0 ? 'superadmin' : 'admin',
+    status: isAutoApproved ? 'active' : 'pending',
+    lastLogin: null
+  });
+
+  if (isAutoApproved) {
+    const token = jwt.sign(
+      { id: String(admin._id), role: admin.role || 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h', algorithm: 'HS256' }
+    );
+    res.cookie('hb_admin', token, cookieOptions);
+  }
+
+  res.status(201).json({
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    status: admin.status,
+    pendingApproval: admin.status === 'pending',
+    message: admin.status === 'pending'
+      ? 'Admin registration submitted! Awaiting Super Admin (healthyxxxbites@gmail.com) approval before login.'
+      : 'Admin account created successfully.'
+  });
+}));
+
+// 3. Admin Logout
 router.post('/logout', (_req, res) => res.clearCookie('hb_admin', { ...cookieOptions, maxAge: undefined }).json({ ok: true }));
 
+// 4. Admin Current Session
 router.get('/me', requireAdmin, asyncRoute(async (req, res) => {
-  const admin = await Admin.findById(req.admin.id).select('email').lean();
+  const admin = await Admin.findById(req.admin.id).select('-passwordHash').lean();
   if (!admin) return res.status(401).json({ message: 'Admin account not found' });
-  res.json({ email: admin.email });
+  res.json({ email: admin.email, name: admin.name, role: admin.role, status: admin.status });
 }));
 
+// PROTECTED ADMIN ROUTES BELOW
 router.use(requireAdmin);
 
-// Dashboard overview stats
+const requireSuperAdmin = (req, res, next) => {
+  if (req.admin?.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Only a super administrator can manage administrator accounts.' });
+  }
+  next();
+};
+
+// 5. Image Upload Endpoint for Admin
+router.post('/upload-image', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'Please upload an image file.' });
+  }
+  const relativePath = `/images/uploads/${req.file.filename}`;
+  res.json({
+    success: true,
+    imageUrl: relativePath,
+    filename: req.file.filename
+  });
+});
+
+// 6. Admin Team Management
+router.get('/admins', requireSuperAdmin, asyncRoute(async (_req, res) => {
+  const admins = await Admin.find().select('-passwordHash').sort({ createdAt: -1 }).lean();
+  res.json(admins);
+}));
+
+router.post('/admins', requireSuperAdmin, asyncRoute(async (req, res) => {
+  const name = String(req.body?.name || '').trim();
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
+  const role = req.body?.role === 'superadmin' ? 'superadmin' : 'admin';
+
+  if (!name || !email || password.length < 8) {
+    return res.status(400).json({ message: 'Name, valid email, and minimum 8-character password are required.' });
+  }
+  if (await Admin.findOne({ email })) {
+    return res.status(409).json({ message: 'Admin with this email already exists.' });
+  }
+
+  const admin = await Admin.create({
+    name,
+    email,
+    passwordHash: await bcrypt.hash(password, 12),
+    role
+  });
+
+  res.status(201).json({ email: admin.email, name: admin.name, role: admin.role });
+}));
+
+router.patch('/admins/:id/approve', requireSuperAdmin, asyncRoute(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid admin ID' });
+  const admin = await Admin.findByIdAndUpdate(
+    req.params.id,
+    { status: 'active' },
+    { new: true, runValidators: true }
+  ).select('-passwordHash').lean();
+  if (!admin) return res.status(404).json({ message: 'Admin not found' });
+  res.json(admin);
+}));
+
+router.patch('/admins/:id/revoke', requireSuperAdmin, asyncRoute(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid admin ID' });
+  if (String(req.params.id) === String(req.admin.id)) {
+    return res.status(400).json({ message: 'You cannot revoke your own super admin account.' });
+  }
+  const admin = await Admin.findByIdAndUpdate(
+    req.params.id,
+    { status: 'pending' },
+    { new: true, runValidators: true }
+  ).select('-passwordHash').lean();
+  if (!admin) return res.status(404).json({ message: 'Admin not found' });
+  res.json(admin);
+}));
+
+router.delete('/admins/:id', requireSuperAdmin, asyncRoute(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid admin ID' });
+  if (String(req.params.id) === String(req.admin.id)) {
+    return res.status(400).json({ message: 'You cannot delete your own admin account.' });
+  }
+  await Admin.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Admin removed successfully.' });
+}));
+
+// 7. Dashboard Overview Stats & Rich Analytics
 router.get('/stats', asyncRoute(async (_req, res) => {
-  const [meals, orders] = await Promise.all([
+  const [meals, orders, totalUsers] = await Promise.all([
     Meal.find().lean(),
-    Order.find().lean()
+    Order.find().lean(),
+    User.countDocuments()
   ]);
 
   const activeMeals = meals.filter(m => m.isActive).length;
@@ -64,10 +258,51 @@ router.get('/stats', asyncRoute(async (_req, res) => {
     preparingOrders,
     completedOrders,
     cancelledOrders,
-    verifiedRevenue
+    verifiedRevenue,
+    totalRegisteredCustomers: totalUsers
   });
 }));
 
+router.get('/analytics', asyncRoute(async (_req, res) => {
+  const orders = await Order.find().sort({ createdAt: -1 }).lean();
+
+  // Aggregate popular meals
+  const mealSales = {};
+  for (const order of orders) {
+    if (order.status === 'cancelled') continue;
+    for (const item of order.items) {
+      if (!mealSales[item.name]) {
+        mealSales[item.name] = { name: item.name, portions: 0, revenue: 0 };
+      }
+      mealSales[item.name].portions += item.quantity;
+      mealSales[item.name].revenue += item.quantity * item.price;
+    }
+  }
+
+  const topDishes = Object.values(mealSales)
+    .sort((a, b) => b.portions - a.portions)
+    .slice(0, 7);
+
+  // Delivery vs Pickup
+  const deliveryCount = orders.filter(o => o.customer?.orderType !== 'pickup').length;
+  const pickupCount = orders.filter(o => o.customer?.orderType === 'pickup').length;
+
+  // Revenue by status
+  const revenueByStatus = {
+    confirmed: orders.filter(o => o.status === 'confirmed').reduce((s, o) => s + o.total, 0),
+    preparing: orders.filter(o => o.status === 'preparing').reduce((s, o) => s + o.total, 0),
+    completed: orders.filter(o => o.status === 'completed').reduce((s, o) => s + o.total, 0),
+    pending: orders.filter(o => o.status === 'pending_whatsapp').reduce((s, o) => s + o.total, 0)
+  };
+
+  res.json({
+    topDishes,
+    orderTypes: { delivery: deliveryCount, pickup: pickupCount },
+    revenueByStatus
+  });
+}));
+
+// Meal details parser
 const parseMeal = (body) => {
   const name = String(body?.name || '').trim();
   const description = String(body?.description || '').trim();
@@ -85,7 +320,6 @@ const parseMeal = (body) => {
   const fat = body?.fat != null && body?.fat !== '' ? Number(body?.fat) : null;
   const stock = body?.stock != null && body?.stock !== '' ? Number(body?.stock) : 50;
 
-  // Allow comma-separated string or array for ingredients & allergens
   let ingredients = [];
   if (Array.isArray(body?.ingredients)) {
     ingredients = body.ingredients.map(i => String(i).trim()).filter(Boolean);
@@ -103,12 +337,10 @@ const parseMeal = (body) => {
   if (!name || name.length > 100 || description.length > 500 || !Number.isFinite(price) || price < 0) {
     return null;
   }
-
   if (!Array.isArray(availableDays) || availableDays.some(d => !DAYS.includes(d))) {
     return null;
   }
 
-  // Validate image URL: allow relative paths (e.g., /images/food/1.png) or valid http/https URLs
   if (imageUrl) {
     const isRelative = /^\/[a-zA-Z0-9_\-./]+$/.test(imageUrl);
     const isHttp = /^https?:\/\//i.test(imageUrl);

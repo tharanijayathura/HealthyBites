@@ -1,18 +1,36 @@
 import { useState } from 'react';
-import { X, Plus, Minus, ShoppingBag, Flame, Dumbbell, Wheat, Droplet, AlertCircle, Check } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { X, Plus, Minus, ShoppingBag, Flame, Dumbbell, Wheat, Droplet, AlertCircle, Check, Lock } from 'lucide-react';
 import { money } from '../utils/money';
 import { formatDate } from '../utils/dates';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function MealDetailModal({ meal, deliveryDate, onClose }) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   if (!meal) return null;
 
   const handleAddToCart = () => {
     if (meal.isSoldOut) return;
+
+    // Only logged-in users can order food
+    if (!user) {
+      onClose();
+      navigate('/login', {
+        state: {
+          from: location.pathname + location.search,
+          message: 'Please sign in to your Healy Bite account to add meals and place your order.'
+        }
+      });
+      return;
+    }
+
     addItem(meal, deliveryDate, quantity);
     setAdded(true);
     setTimeout(() => {
@@ -163,6 +181,10 @@ export default function MealDetailModal({ meal, deliveryDate, onClose }) {
                   </>
                 ) : meal.isSoldOut ? (
                   'Sold Out'
+                ) : !user ? (
+                  <>
+                    <Lock size={17} /> Sign In to Order ({money(meal.price * quantity)})
+                  </>
                 ) : (
                   <>
                     <ShoppingBag size={18} /> Add ({money(meal.price * quantity)})

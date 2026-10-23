@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
-import { ShoppingBag, Menu, X, Leaf, Dumbbell, ShieldCheck } from 'lucide-react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Menu, X, User, LogIn, Shield, LogOut } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import BrandLogo from './BrandLogo';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { itemCount } = useCart();
+  const { user, admin, logoutCustomer, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -21,18 +26,16 @@ export default function Header() {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  const handleSignOut = async () => {
+    await logoutCustomer();
+    navigate('/');
+  };
+
   return (
-    <header className={`site-header ${scrolled ? 'header-scrolled shadow-xl' : ''}`}>
+    <header className={`site-header ${scrolled ? 'header-scrolled shadow-2xl' : ''}`}>
       <div className="container nav-wrap">
         {/* Brand Logo */}
-        <Link to="/" className="brand-logo" aria-label="Healy Bite Home">
-          <div className="brand-icon-box">
-            <Leaf size={22} className="text-[#6C8C17]" />
-          </div>
-          <span>
-            Healy<span className="brand-leaf">Bite.</span>
-          </span>
-        </Link>
+        <BrandLogo />
 
         {/* Desktop Navigation */}
         <nav className="nav-links-desktop" aria-label="Main Navigation">
@@ -55,11 +58,69 @@ export default function Header() {
 
         {/* Header Right Actions */}
         <div className="nav-actions">
-          <Link to="/cart" className="cart-btn" aria-label={`Shopping cart with ${itemCount} items`}>
-            <ShoppingBag size={18} className="text-[#6C8C17]" />
-            <span className="font-semibold text-sm hidden sm:inline">Cart</span>
-            <span className="cart-badge">{itemCount}</span>
-          </Link>
+          {/* Cart Icon: Only shown if there are items in the cart and not on admin pages */}
+          {!isAdminRoute && itemCount > 0 && (
+            <Link
+              to="/cart"
+              className="cart-btn animate-fade-in"
+              aria-label={`Shopping cart with ${itemCount} items`}
+            >
+              <div className="relative flex items-center justify-center">
+                <ShoppingBag size={18} className="text-[#6C8C17]" />
+                <span className="cart-badge">{itemCount}</span>
+              </div>
+              <span className="font-semibold text-xs hidden sm:inline text-[#DDE8CB]">Cart</span>
+            </Link>
+          )}
+
+          {/* User Auth Pill */}
+          {!isAdminRoute && (
+            <>
+              {loading ? (
+                <div className="w-8 h-8 rounded-full bg-[#1A2110] animate-pulse" />
+              ) : user ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/account"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1A2110] border border-[#2C3821] hover:border-[#6C8C17] text-xs font-semibold text-[#DDE8CB] transition-all"
+                    title={user.name}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-[#2C3821] flex items-center justify-center text-[#6C8C17] font-bold text-[11px]">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="max-w-[110px] truncate hidden md:inline">{user.name.split(' ')[0]}</span>
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-xs text-[#A9ADA2] hover:text-[#FFB3A8] p-1.5 transition-colors hidden sm:block"
+                    title="Sign Out"
+                    aria-label="Sign out"
+                  >
+                    <LogOut size={15} />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="btn btn-outline btn-sm text-xs font-semibold flex items-center gap-1.5"
+                >
+                  <LogIn size={14} className="text-[#6C8C17]" />
+                  <span>Sign In</span>
+                </Link>
+              )}
+            </>
+          )}
+
+          {/* Admin link pill if logged in as admin */}
+          {admin && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#263117] border border-[#6C8C17] text-xs font-bold text-[#DDE8CB] hover:bg-[#3C7100]/40 transition-colors"
+            >
+              <Shield size={13} className="text-[#6C8C17]" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          )}
 
           {/* Mobile Hamburger Toggle */}
           <button
@@ -90,14 +151,44 @@ export default function Header() {
           <NavLink to="/contact" className={({ isActive }) => isActive ? 'active' : ''}>
             Contact
           </NavLink>
-          <Link to="/cart" className="flex items-center justify-between text-sm py-2 text-[#DDE8CB]">
-            <span>Shopping Cart</span>
-            <span className="cart-badge">{itemCount}</span>
-          </Link>
+
+          {itemCount > 0 && (
+            <Link to="/cart" className="flex items-center justify-between text-sm py-2 text-[#DDE8CB]">
+              <span className="flex items-center gap-2">
+                <ShoppingBag size={17} className="text-[#6C8C17]" /> Shopping Cart
+              </span>
+              <span className="cart-badge">{itemCount}</span>
+            </Link>
+          )}
+
+          {user ? (
+            <div className="pt-3 border-t border-[#2C3821] flex flex-col gap-2">
+              <Link to="/account" className="flex items-center gap-2 text-sm text-[#DDE8CB]">
+                <User size={16} className="text-[#6C8C17]" />
+                <span>My Profile ({user.name})</span>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 text-xs text-[#A9ADA2] hover:text-[#FFB3A8] py-1 text-left"
+              >
+                <LogOut size={14} /> Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="pt-3 border-t border-[#2C3821] flex items-center justify-between">
+              <Link to="/login" className="btn btn-primary btn-sm text-xs">
+                Customer Sign In
+              </Link>
+              <Link to="/register" className="text-xs text-[#DDE8CB] hover:underline">
+                Create Account
+              </Link>
+            </div>
+          )}
+
           <div className="pt-2 border-t border-[#2C3821] flex items-center justify-between">
-            <span className="text-xs text-[#A9ADA2]">Management</span>
-            <Link to="/admin" className="text-xs text-[#6C8C17] hover:underline">
-              Admin Portal
+            <span className="text-xs text-[#A9ADA2]">Staff Access</span>
+            <Link to={admin ? '/admin' : '/admin/login'} className="text-xs text-[#6C8C17] hover:underline flex items-center gap-1">
+              <Shield size={12} /> {admin ? 'Dashboard' : 'Admin Login'}
             </Link>
           </div>
         </div>

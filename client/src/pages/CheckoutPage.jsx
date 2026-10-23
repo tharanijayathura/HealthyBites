@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   MessageCircle,
   ArrowLeft,
@@ -9,12 +9,15 @@ import {
   ShieldCheck,
   AlertCircle,
   ExternalLink,
-  RotateCcw
+  RotateCcw,
+  Lock,
+  ArrowRight
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { get, post } from '../api/client';
 import { formatDate, todayInColombo } from '../utils/dates';
 import { money } from '../utils/money';
+import { useAuth } from '../context/AuthContext';
 
 const DELIVERY_TIMES = [
   'Morning Slot (8:00 AM – 10:30 AM)',
@@ -24,6 +27,9 @@ const DELIVERY_TIMES = [
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [customer, setCustomer] = useState({
     name: '',
     phone: '',
@@ -46,6 +52,31 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [orderResult, setOrderResult] = useState(null);
+
+  // If user is not logged in, redirect them to login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login', {
+        replace: true,
+        state: {
+          from: '/checkout',
+          message: 'Please sign in to Healy Bite to complete your meal order.'
+        }
+      });
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    setCustomer(current => ({
+      ...current,
+      name: current.name || user.name || '',
+      phone: current.phone || user.phone || '',
+      whatsappNumber: current.whatsappNumber || user.whatsappNumber || user.phone || '',
+      email: current.email || user.email || '',
+      address: current.address || user.address || ''
+    }));
+  }, [user]);
 
   useEffect(() => {
     get('/settings')

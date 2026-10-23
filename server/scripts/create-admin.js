@@ -11,9 +11,24 @@ try {
     throw new Error('Configure a valid ADMIN_EMAIL and a unique ADMIN_PASSWORD (12+ characters) in server/.env');
   }
   await connectDB();
-  if (await Admin.exists({ email })) throw new Error('Admin already exists. No existing password was changed.');
-  await Admin.create({ email, passwordHash: await bcrypt.hash(password, 12) });
-  console.log(`Admin account created: ${email}. Remove ADMIN_PASSWORD from server/.env after setup.`);
+  const existing = await Admin.findOne({ email });
+  if (existing) {
+    existing.name = 'Super Admin';
+    existing.role = 'superadmin';
+    existing.status = 'active';
+    existing.passwordHash = await bcrypt.hash(password, 12);
+    await existing.save();
+    console.log(`Existing admin updated to super-admin with latest password: ${email}.`);
+  } else {
+    await Admin.create({
+      name: 'Super Admin',
+      email,
+      passwordHash: await bcrypt.hash(password, 12),
+      role: 'superadmin',
+      status: 'active'
+    });
+    console.log(`Super-admin account created: ${email}.`);
+  }
 } catch (e) {
   console.error(e.message);
   process.exitCode = 1;

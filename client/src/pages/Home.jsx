@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -9,11 +9,12 @@ import {
   Flame,
   ShieldCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
   CheckCircle2,
-  PhoneCall,
   Clock,
-  Plus
+  MousePointer
 } from 'lucide-react';
 import { get } from '../api/client';
 import { demoMeals } from '../data/demoMeals';
@@ -37,6 +38,13 @@ const heroDishes = [
     tag: 'KETO & LOW CARB'
   },
   {
+    image: '/images/food/3.png',
+    title: 'Acai Protein & Granola Bowl',
+    protein: '22g Protein',
+    calories: '440 kcal',
+    tag: 'PRE-WORKOUT ENERGY'
+  },
+  {
     image: '/images/food/4.png',
     title: 'Herb-Crusted Salmon & Potatoes',
     protein: '46g Protein',
@@ -44,11 +52,25 @@ const heroDishes = [
     tag: 'OMEGA-3 RECOVERY'
   },
   {
-    image: '/images/food/3.png',
-    title: 'Acai Protein & Granola Bowl',
-    protein: '22g Protein',
-    calories: '440 kcal',
-    tag: 'PRE-WORKOUT ENERGY'
+    image: '/images/food/5.png',
+    title: 'Egg & Brown Rice Power Bowl',
+    protein: '38g Protein',
+    calories: '490 kcal',
+    tag: 'CLEAN BULK'
+  },
+  {
+    image: '/images/food/6.png',
+    title: 'High-Protein Grilled Chicken Wrap',
+    protein: '44g Protein',
+    calories: '510 kcal',
+    tag: 'LEAN MUSCLE'
+  },
+  {
+    image: '/images/food/7.png',
+    title: 'Healthy Vegetable Protein Pasta',
+    protein: '34g Protein',
+    calories: '480 kcal',
+    tag: 'PLANT POWER'
   }
 ];
 
@@ -79,6 +101,79 @@ export default function Home() {
   const [activeDishIndex, setActiveDishIndex] = useState(0);
   const [featuredMeals, setFeaturedMeals] = useState([]);
   const [activeFaq, setActiveFaq] = useState(null);
+  const [slideAnim, setSlideAnim] = useState('none');
+  const [rotationAngle, setRotationAngle] = useState(0);
+
+  const showcaseRef = useRef(null);
+  const isWheelingRef = useRef(false);
+  const touchStartXRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const mouseStartXRef = useRef(0);
+
+  const totalDishes = heroDishes.length;
+
+  const goToNextDish = useCallback(() => {
+    setSlideAnim('next');
+    setRotationAngle(prev => prev + 35);
+    setActiveDishIndex(prev => (prev + 1) % totalDishes);
+  }, [totalDishes]);
+
+  const goToPrevDish = useCallback(() => {
+    setSlideAnim('prev');
+    setRotationAngle(prev => prev - 35);
+    setActiveDishIndex(prev => (prev - 1 + totalDishes) % totalDishes);
+  }, [totalDishes]);
+
+  // Touchpad & Wheel Interaction
+  const handleWheel = useCallback((e) => {
+    // Check horizontal or vertical scroll intent
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(delta) < 20) return;
+
+    // Prevent excessive rapid trigger
+    if (isWheelingRef.current) return;
+    isWheelingRef.current = true;
+
+    if (delta > 0) {
+      goToNextDish();
+    } else {
+      goToPrevDish();
+    }
+
+    setTimeout(() => {
+      isWheelingRef.current = false;
+    }, 380);
+  }, [goToNextDish, goToPrevDish]);
+
+  // Mobile Touch Gestures
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartXRef.current - touchEndX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) goToNextDish();
+      else goToPrevDish();
+    }
+  };
+
+  // Mouse drag support
+  const handleMouseDown = (e) => {
+    isDraggingRef.current = true;
+    mouseStartXRef.current = e.clientX;
+  };
+
+  const handleMouseUp = (e) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    const diff = mouseStartXRef.current - e.clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) goToNextDish();
+      else goToPrevDish();
+    }
+  };
 
   useEffect(() => {
     get('/meals')
@@ -98,7 +193,7 @@ export default function Home() {
 
   return (
     <>
-      {/* 1. CINEMATIC HERO SECTION */}
+      {/* 1. CINEMATIC HERO SECTION WITH TOUCHPAD INTERACTIVE PLATES */}
       <section className="hero-wrapper">
         <div
           className="hero-bg-overlay"
@@ -149,23 +244,68 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Plate Showcase (Inspired by Reference Images 1 & 2) */}
-          <div className="hero-showcase">
+          {/* Right Plate Showcase — TOUCHPAD INTERACTIVE SLIDING PLATE */}
+          <div
+            ref={showcaseRef}
+            className="hero-showcase select-none"
+            onWheel={handleWheel}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goToNextDish();
+              if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goToPrevDish();
+            }}
+            aria-label="Interactive meal carousel. Use touchpad two-finger scroll or swipe to change plates."
+          >
+            {/* Previous Dish Button */}
+            <button
+              type="button"
+              className="plate-nav-arrow plate-nav-left"
+              onClick={goToPrevDish}
+              aria-label="Previous meal plate"
+            >
+              <ChevronLeft size={22} />
+            </button>
+
+            {/* Next Dish Button */}
+            <button
+              type="button"
+              className="plate-nav-arrow plate-nav-right"
+              onClick={goToNextDish}
+              aria-label="Next meal plate"
+            >
+              <ChevronRight size={22} />
+            </button>
+
             <div className="plate-halo">
-              <div className="plate-disc">
+              {/* Rotating outer ring glow */}
+              <div className="plate-outer-glow" />
+
+              <div
+                className="plate-disc transition-transform duration-500 ease-out cursor-grab active:cursor-grabbing"
+                style={{
+                  transform: `rotate(${rotationAngle}deg) scale(1)`
+                }}
+              >
                 <img
+                  key={currentDish.image}
                   src={currentDish.image}
                   alt={currentDish.title}
+                  className="w-full h-full object-cover transition-opacity duration-300 animate-plate-fade"
+                  draggable={false}
                 />
               </div>
 
               {/* Top Sand Badge */}
-              <div className="floating-badge-top">
+              <div className="floating-badge-top animate-fade-in">
                 {currentDish.tag}
               </div>
 
               {/* Floating Macro Card */}
-              <div className="floating-macro-card">
+              <div className="floating-macro-card animate-fade-in">
                 <div className="macro-icon">
                   <Flame size={20} />
                 </div>
@@ -178,25 +318,45 @@ export default function Home() {
                   </span>
                 </div>
               </div>
+
+              {/* Touchpad / Swipe hint tooltip */}
+              <div className="plate-touch-hint">
+                <MousePointer size={12} className="text-[#6C8C17] animate-bounce" />
+                <span>Swipe / Scroll touchpad to slide plates</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Hero Plate Switcher Dots */}
-        <div className="container mt-8 flex items-center justify-center gap-3">
-          {heroDishes.map((dish, i) => (
-            <button
-              key={i}
-              type="button"
-              className={`h-2.5 rounded-full transition-all ${
-                i === activeDishIndex
-                  ? 'w-8 bg-[#6C8C17]'
-                  : 'w-2.5 bg-[#2C3821] hover:bg-[#4D642C]'
-              }`}
-              onClick={() => setActiveDishIndex(i)}
-              aria-label={`View ${dish.title}`}
-            />
-          ))}
+        {/* Hero Plate Thumbnails & Indicators */}
+        <div className="container mt-10">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            {heroDishes.map((dish, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`flex items-center gap-2 p-1.5 pr-3 rounded-full border transition-all ${
+                  i === activeDishIndex
+                    ? 'bg-[#1A2110] border-[#6C8C17] shadow-lg shadow-[#6C8C17]/20 scale-105'
+                    : 'bg-[#090B01]/70 border-[#2C3821] hover:border-[#4D642C] opacity-70 hover:opacity-100'
+                }`}
+                onClick={() => {
+                  setRotationAngle(prev => prev + (i > activeDishIndex ? 35 : -35));
+                  setActiveDishIndex(i);
+                }}
+                aria-label={`View ${dish.title}`}
+              >
+                <img
+                  src={dish.image}
+                  alt=""
+                  className="w-7 h-7 rounded-full object-cover border border-[#2C3821]"
+                />
+                <span className="text-[11px] font-bold text-white hidden md:inline max-w-[130px] truncate">
+                  {dish.title.split(' ')[0]} {dish.title.split(' ')[1]}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

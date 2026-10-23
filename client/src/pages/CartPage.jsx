@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Minus, Plus, Trash2, ShoppingBag, Calendar, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Minus, Plus, Trash2, ShoppingBag, Calendar, ShieldCheck, ArrowLeft, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/dates';
 import { money } from '../utils/money';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, itemCount, subtotal } = useCart();
+  const { user } = useAuth();
 
   // Group items by delivery date
   const groupedItems = items.reduce((groups, item) => {
@@ -193,9 +195,24 @@ export default function CartPage() {
               </span>
             </div>
 
-            <Link to="/checkout" className="btn btn-primary btn-lg btn-block mb-3">
-              Proceed to Checkout <ArrowRight size={18} />
-            </Link>
+            {user ? (
+              <Link to="/checkout" className="btn btn-primary btn-lg btn-block mb-3">
+                Proceed to Checkout <ArrowRight size={18} />
+              </Link>
+            ) : (
+              <div className="space-y-2 mb-3">
+                <Link
+                  to="/login"
+                  state={{ from: '/checkout', message: 'Please sign in to your Healy Bite account to place your order.' }}
+                  className="btn btn-primary btn-lg btn-block"
+                >
+                  <Lock size={17} /> Sign In to Order
+                </Link>
+                <p className="text-[11px] text-[#A9ADA2] text-center">
+                  Only signed-in members can complete checkout.
+                </p>
+              </div>
+            )}
 
             <Link to="/menu" className="block text-center text-xs text-[#A9ADA2] hover:text-[#DDE8CB]">
               Continue Browsing Menu

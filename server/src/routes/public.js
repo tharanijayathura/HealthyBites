@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import crypto from 'node:crypto';
+import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import Meal, { DAYS } from '../models/Meal.js';
 import Order from '../models/Order.js';
@@ -144,8 +145,18 @@ router.post('/orders', checkoutLimiter, asyncRoute(async (req, res) => {
 
   const code = `HB-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
+  let userId = null;
+  const userToken = req.cookies?.hb_user || req.headers.authorization?.replace(/^Bearer\s+/i, '');
+  if (userToken) {
+    try {
+      const decoded = jwt.verify(userToken, process.env.JWT_SECRET);
+      if (decoded?.id && mongoose.isValidObjectId(decoded.id)) userId = decoded.id;
+    } catch {}
+  }
+
   const order = await Order.create({
     code,
+    user: userId,
     customer: {
       name,
       phone,

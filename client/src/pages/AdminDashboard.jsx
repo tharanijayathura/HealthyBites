@@ -17,9 +17,11 @@ import {
   Search,
   ExternalLink,
   Flame,
-  Dumbbell
+  Dumbbell,
+  BarChart3,
+  ShieldCheck
 } from 'lucide-react';
-import { get, post, put, patch, del } from '../api/client';
+import { get, post, put, patch, del, uploadImage } from '../api/client';
 import { DAYS } from '../utils/dates';
 import { money } from '../utils/money';
 
@@ -69,6 +71,8 @@ export default function AdminDashboard() {
   const [meals, setMeals] = useState([]);
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [admins, setAdmins] = useState([]);
   const [settings, setSettings] = useState({
     businessName: 'Healy Bite',
     tagline: 'Fuel Your Fitness. Nourish Your Body.',
@@ -88,19 +92,24 @@ export default function AdminDashboard() {
   const [orderSearch, setOrderSearch] = useState('');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const refreshData = async () => {
     try {
-      const [mealsRes, ordersRes, settingsRes, statsRes] = await Promise.all([
+      const [mealsRes, ordersRes, settingsRes, statsRes, analyticsRes, adminsRes] = await Promise.all([
         get('/admin/meals'),
         get('/admin/orders'),
         get('/admin/settings'),
-        get('/admin/stats').catch(() => null)
+        get('/admin/stats').catch(() => null),
+        get('/admin/analytics').catch(() => null),
+        get('/admin/admins').catch(() => [])
       ]);
-      setMeals(mealsRes);
-      setOrders(ordersRes);
-      setSettings(s => ({ ...s, ...settingsRes }));
+      setMeals(mealsRes || []);
+      setOrders(ordersRes || []);
+      setSettings(s => ({ ...s, ...(settingsRes || {}) }));
       if (statsRes) setStats(statsRes);
+      if (analyticsRes) setAnalytics(analyticsRes);
+      setAdmins(adminsRes || []);
     } catch (err) {
       setError(err.message || 'Error refreshing dashboard data');
     }
@@ -136,6 +145,16 @@ export default function AdminDashboard() {
       await post('/admin/logout', {});
     } catch {}
     navigate('/admin/login', { replace: true });
+  };
+
+  const handleApproveAdmin = async (adminId) => {
+    try {
+      await patch(`/admin/admins/${adminId}/approve`, {});
+      await refreshData();
+      showNotification('Administrator approved successfully.');
+    } catch (err) {
+      setError(err.message || 'Could not approve administrator.');
+    }
   };
 
   // Meal Form Handlers
@@ -198,6 +217,23 @@ export default function AdminDashboard() {
       await refreshData();
     } catch (err) {
       setError(err.message || 'Could not save meal.');
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setError('');
+    setUploadingImage(true);
+    try {
+      const response = await uploadImage(file);
+      setMealForm(current => ({ ...current, imageUrl: response.imageUrl }));
+      showNotification('Meal image uploaded successfully.');
+    } catch (err) {
+      setError(err.message || 'Could not upload meal image.');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -350,8 +386,15 @@ export default function AdminDashboard() {
         {[
           ['meals', 'Meals Management'],
           ['schedule', 'Weekly Menu Matrix'],
+          ['analytics', 'Analytics'],
           ['orders', `Orders (${orders.length})`],
-          ['settings', 'Business Settings']
+          ['settings', 'Business Settings'],
+          ...(admin?.role === 'superadmin' ? [
+            ['team', admins.filter(a => a.status === 'pending').length > 0
+              ? `Admin Approvals (${admins.filter(a => a.status === 'pending').length} Pending!)`
+              : 'Admin Approvals'
+            ]
+          ] : [])
         ].map(([id, label]) => (
           <button
             key={id}
@@ -468,6 +511,16 @@ export default function AdminDashboard() {
                   value={mealForm.imageUrl}
                   onChange={(e) => setMealForm({ ...mealForm, imageUrl: e.target.value })}
                 />
+                <label className="btn btn-outline btn-sm mt-2 inline-flex cursor-pointer">
+                  {uploadingImage ? 'Uploading image...' : 'Upload image from device'}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                  />
+                </label>
               </div>
 
               {/* Macros Row */}
@@ -718,6 +771,69 @@ export default function AdminDashboard() {
       )}
 
       {/* TAB 3: ORDER MANAGEMENT */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6">
+          <div className="bg-[#1A2110] border border-[#2C3821] rounded-2xl p-6">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold">Business Analytics</h2>
+                <p className="text-sm text-[#A9ADA2] mt-1">
+                  Sales trends and customer ordering preferences from recorded orders.
+                </p>
+              </div>
+              <BarChart3 className="text-[#6C8C17]" size={28} />
+            </div>
+
+            {!analytics ? (
+              <p className="text-sm text-[#A9ADA2] py-8 text-center">Analytics are not available yet.</p>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    ['Delivery Orders', analytics.orderTypes?.delivery || 0],
+                    ['Pickup Orders', analytics.orderTypes?.pickup || 0],
+                    ['Registered Customers', stats?.totalRegisteredCustomers || 0]
+                  ].map(([label, value]) => (
+                    <div key={label} className="bg-[#090B01] border border-[#2C3821] rounded-xl p-4">
+                      <span className="stat-label">{label}</span>
+                      <strong className="block text-2xl mt-2">{value}</strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-bold mb-3">Top Dishes by Portions</h3>
+                    <div className="space-y-2">
+                      {(analytics.topDishes || []).length === 0 ? (
+                        <p className="text-sm text-[#A9ADA2]">No order data yet.</p>
+                      ) : analytics.topDishes.map((dish) => (
+                        <div key={dish.name} className="flex items-center justify-between bg-[#090B01] rounded-lg px-3 py-2 text-sm">
+                          <span className="text-[#DDE8CB]">{dish.name}</span>
+                          <span className="text-[#6C8C17] font-semibold">{dish.portions} portions</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-3">Revenue by Order Status</h3>
+                    <div className="space-y-2">
+                      {Object.entries(analytics.revenueByStatus || {}).map(([status, value]) => (
+                        <div key={status} className="flex items-center justify-between bg-[#090B01] rounded-lg px-3 py-2 text-sm">
+                          <span className="capitalize text-[#DDE8CB]">{status}</span>
+                          <span className="text-[#D8BE8C] font-semibold">{money(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: ORDER MANAGEMENT */}
       {activeTab === 'orders' && (
         <div className="space-y-6">
           {/* Order Search & Filter Bar */}
@@ -888,7 +1004,62 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 4: BUSINESS SETTINGS */}
+      {/* TAB 5: BUSINESS SETTINGS */}
+      {activeTab === 'team' && admin?.role === 'superadmin' && (
+        <div className="bg-[#1A2110] border border-[#2C3821] rounded-2xl p-6">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <span className="eyebrow">SUPER ADMIN ONLY</span>
+              <h2 className="text-xl font-bold mb-1">Administrator approvals</h2>
+              <p className="text-sm text-[#A9ADA2]">
+                Review staff access before they can enter the operations dashboard.
+              </p>
+            </div>
+            <ShieldCheck size={28} className="text-[#6C8C17]" />
+          </div>
+          <div className="space-y-3">
+            {admins.length === 0 ? (
+              <p className="text-sm text-[#A9ADA2] py-6 text-center">No administrator accounts found.</p>
+            ) : admins.map((teamAdmin) => (
+              <div key={teamAdmin._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#090B01] border border-[#2C3821] rounded-xl p-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <strong className="text-white">{teamAdmin.name}</strong>
+                    <span className={`badge-tag ${teamAdmin.status === 'pending' ? 'text-[#D8BE8C]' : ''}`}>
+                      {teamAdmin.status || 'active'}
+                    </span>
+                    {teamAdmin.role === 'superadmin' && <span className="text-[10px] text-[#6C8C17] uppercase font-bold">Owner</span>}
+                  </div>
+                  <p className="text-xs text-[#A9ADA2] mt-1">{teamAdmin.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {teamAdmin.status === 'pending' && (
+                    <button type="button" className="btn btn-primary btn-sm" onClick={() => handleApproveAdmin(teamAdmin._id)}>
+                      <CheckCircle2 size={14} /> Approve
+                    </button>
+                  )}
+                  {String(teamAdmin._id) !== String(admin?.id) && teamAdmin.role !== 'superadmin' && (
+                    <button type="button" className="btn btn-danger btn-sm" onClick={async () => {
+                      if (!window.confirm(`Remove ${teamAdmin.name}'s administrator access?`)) return;
+                      try {
+                        await del(`/admin/admins/${teamAdmin._id}`);
+                        await refreshData();
+                        showNotification('Administrator removed.');
+                      } catch (err) {
+                        setError(err.message || 'Could not remove administrator.');
+                      }
+                    }}>
+                      <Trash2 size={14} /> Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: BUSINESS SETTINGS */}
       {activeTab === 'settings' && (
         <div className="max-w-2xl bg-[#1A2110] border border-[#2C3821] rounded-2xl p-8">
           <h2 className="text-xl font-bold mb-2">Business Settings</h2>
