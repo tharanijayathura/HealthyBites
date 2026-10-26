@@ -27,7 +27,7 @@ export default function ContactPage() {
 
   const handleWhatsAppInquiry = (e) => {
     e.preventDefault();
-    const text = `Hi ${settings.businessName}! My name is ${inquiry.name} (${inquiry.phone}). Inquiry: ${inquiry.message}`;
+    const text = `Hello Healthy Bites! I would like to inquire about your meal plans.\n\nName: ${inquiry.name}\nPhone: ${inquiry.phone}\nInquiry: ${inquiry.message}`;
     window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 

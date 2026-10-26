@@ -273,7 +273,7 @@ export default function CustomerProfile() {
                   {order.status === 'pending_whatsapp' && (
                     <div className="mt-3 pt-2 border-t border-[#2C3821]/40 flex justify-end">
                       <a
-                        href={`https://wa.me/94712599785?text=${encodeURIComponent(`Hi Healy Bite! Following up on order ${order.code} for ${order.customer?.name}.`)}`}
+                        href={`https://wa.me/94712599785?text=${encodeURIComponent(`Hi Healthy Bites! Following up on order ${order.code} for ${order.customer?.name}.`)}`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs text-[#6C8C17] hover:underline"

@@ -581,7 +581,7 @@ export default function Home() {
               Explore Weekly Menu <ArrowRight size={18} />
             </Link>
             <a
-              href="https://wa.me/94712599785?text=Hello%20Healy%20Bite!%20I%20would%20like%20to%20inquire%20about%20your%20meal%20plans."
+              href="https://wa.me/94712599785?text=Hello%20Healthy%20Bites!%20I%20would%20like%20to%20inquire%20about%20your%20meal%20plans."
               target="_blank"
               rel="noreferrer"
               className="btn btn-outline btn-lg"
