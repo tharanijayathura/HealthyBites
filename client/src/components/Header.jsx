@@ -93,7 +93,7 @@ export default function Header() {
                     <div className="w-6 h-6 rounded-full bg-[#2C3821] flex items-center justify-center text-[#6C8C17] font-bold text-[11px]">
                       {user.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
-                    <span className="max-w-[110px] truncate hidden md:inline">{user.name.split(' ')[0]}</span>
+                    <span className="max-w-27.5 truncate hidden md:inline">{user.name.split(' ')[0]}</span>
                   </Link>
                   <button
                     onClick={handleSignOut}

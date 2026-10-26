@@ -142,7 +142,7 @@ export default function MealDetailModal({ meal, deliveryDate, onClose }) {
             {/* Allergens Notice */}
             {meal.allergens && meal.allergens.length > 0 && (
               <div className="flex items-center gap-2 text-xs text-[#D8BE8C] bg-[#231E12] border border-[#483B1F] p-2.5 rounded-lg mb-4">
-                <AlertCircle size={15} className="flex-shrink-0" />
+                <AlertCircle size={15} className="shrink-0" />
                 <span>Contains allergens: <strong>{meal.allergens.join(', ')}</strong></span>
               </div>
             )}

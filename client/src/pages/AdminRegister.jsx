@@ -30,7 +30,7 @@ export default function AdminRegister() {
 
   return (
     <main className="container auth-page flex items-center justify-center">
-      <div className="auth-card w-full max-w-md rounded-[2rem] p-7 md:p-10">
+      <div className="auth-card w-full max-w-md rounded-4xl p-7 md:p-10">
         <div className="text-center mb-8">
           <div className="auth-icon w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto mb-5">
             <img src="/images/logo.png" alt="Healthy Bite logo" className="auth-logo-image" />

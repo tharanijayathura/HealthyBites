@@ -393,7 +393,7 @@ export default function CheckoutPage() {
 
           {error && (
             <div className="p-4 rounded-xl bg-[#371F1D] border border-[#8D4C46] text-[#FFC2B8] text-sm mb-5 flex items-center gap-2">
-              <AlertCircle size={17} className="flex-shrink-0" />
+              <AlertCircle size={17} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}

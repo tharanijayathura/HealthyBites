@@ -87,7 +87,7 @@ export default function CartPage() {
                       className="cart-item-row flex items-center gap-4 py-3 border-b border-[#2C3821]/60 last:border-b-0"
                     >
                       {/* Image / Thumbnail */}
-                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-[#090B01] border border-[#2C3821] flex-shrink-0">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-[#090B01] border border-[#2C3821] shrink-0">
                         <img
                           src={item.imageUrl || '/images/food/1.png'}
                           alt={item.name}
@@ -189,7 +189,7 @@ export default function CartPage() {
             </div>
 
             <div className="bg-[#090B01] border border-[#2C3821] rounded-xl p-3.5 mb-6 text-xs text-[#A9ADA2] flex items-start gap-2.5">
-              <ShieldCheck size={18} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
+              <ShieldCheck size={18} className="text-[#6C8C17] shrink-0 mt-0.5" />
               <span>
                 All meals are prepared fresh on your selected delivery dates. Final confirmation occurs directly on WhatsApp.
               </span>

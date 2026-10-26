@@ -33,7 +33,7 @@ export default function CustomerLogin() {
 
   return (
     <main className="container auth-page flex items-center justify-center">
-      <div className="auth-card w-full max-w-md rounded-[2rem] p-7 md:p-10">
+      <div className="auth-card w-full max-w-md rounded-4xl p-7 md:p-10">
         <div className="relative text-center mb-8">
           <div className="auth-icon w-16 h-16 rounded-2xl border flex items-center justify-center text-[#6C8C17] mx-auto mb-5">
             <img src="/images/logo.png" alt="Healthy Bite logo" className="auth-logo-image" />
@@ -47,14 +47,14 @@ export default function CustomerLogin() {
 
         {redirectMessage && (
           <div className="p-3.5 rounded-xl bg-[#263117] border border-[#657539] text-[#DDE8CB] text-xs mb-5 flex items-center gap-2.5">
-            <Lock size={16} className="text-[#6C8C17] flex-shrink-0" />
+            <Lock size={16} className="text-[#6C8C17] shrink-0" />
             <span>{redirectMessage}</span>
           </div>
         )}
 
         {error && (
           <div className="p-3.5 rounded-xl bg-[#371F1D] border border-[#8D4C46] text-[#FFC2B8] text-xs mb-5 flex items-center gap-2">
-            <AlertCircle size={16} className="flex-shrink-0" />
+            <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}

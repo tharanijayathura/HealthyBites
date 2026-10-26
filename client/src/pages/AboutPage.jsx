@@ -19,13 +19,13 @@ export default function AboutPage() {
 
       {/* Story Grid with Gym Atmosphere Background */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-24">
-        <div className="relative rounded-3xl overflow-hidden border border-[#2C3821] aspect-[4/3]">
+        <div className="relative rounded-3xl overflow-hidden border border-[#2C3821] aspect-4/3">
           <img
             src="/images/bg4.png"
             alt="Modern training facility and lifestyle"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0E03] via-transparent to-transparent opacity-80" />
+          <div className="absolute inset-0 bg-linear-to-t from-[#0D0E03] via-transparent to-transparent opacity-80" />
           <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-[#090B01]/90 backdrop-blur border border-[#2C3821]">
             <span className="text-xs text-[#6C8C17] uppercase tracking-wider font-bold">Healy Bite Kitchen</span>
             <p className="text-sm text-white font-medium m-0">Fresh culinary prep every morning in Colombo</p>

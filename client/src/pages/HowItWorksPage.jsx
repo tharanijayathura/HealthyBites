@@ -86,15 +86,15 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-bold mb-5">Ordering with confidence</h2>
           <ul className="space-y-4 text-sm text-[#A9ADA2]">
             <li className="flex gap-3">
-              <CheckCircle2 size={18} className="text-[#6C8C17] flex-shrink-0" />
+              <CheckCircle2 size={18} className="text-[#6C8C17] shrink-0" />
               <span>Prices and meal availability are checked again by the server at checkout.</span>
             </li>
             <li className="flex gap-3">
-              <CheckCircle2 size={18} className="text-[#6C8C17] flex-shrink-0" />
+              <CheckCircle2 size={18} className="text-[#6C8C17] shrink-0" />
               <span>You can order meals for different delivery dates in the same cart.</span>
             </li>
             <li className="flex gap-3">
-              <CheckCircle2 size={18} className="text-[#6C8C17] flex-shrink-0" />
+              <CheckCircle2 size={18} className="text-[#6C8C17] shrink-0" />
               <span>Your order is confirmed by our team after the WhatsApp message is received.</span>
             </li>
           </ul>

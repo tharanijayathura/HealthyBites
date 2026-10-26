@@ -90,7 +90,7 @@ export default function MenuPage() {
 
       {previewNotice && (
         <div className="mb-6 p-4 rounded-xl bg-[#263117] border border-[#657539] text-[#DDE8CB] text-sm flex items-center gap-3">
-          <AlertCircle size={18} className="text-[#6C8C17] flex-shrink-0" />
+          <AlertCircle size={18} className="text-[#6C8C17] shrink-0" />
           <span>Showing offline sample menu preview. Seeding MongoDB will connect live database meals.</span>
         </div>
       )}

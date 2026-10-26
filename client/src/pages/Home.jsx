@@ -518,7 +518,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <Link to="/menu" className="btn btn-primary btn-lg">
               Order Your Meals Now <ArrowRight size={18} />
             </Link>

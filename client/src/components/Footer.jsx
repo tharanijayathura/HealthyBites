@@ -48,21 +48,21 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Ordering Hours</h4>
           <div className="flex items-start gap-3 text-sm text-[#A9ADA2] mb-3">
-            <Clock size={16} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
+            <Clock size={16} className="text-[#6C8C17] shrink-0 mt-0.5" />
             <div>
               <strong className="text-white block">Cutoff: {settings.cutoffTime}</strong>
               <small className="text-xs text-[#A9ADA2]">Orders must be placed by {settings.cutoffTime} for the next scheduled day deliveries.</small>
             </div>
           </div>
           <div className="flex items-start gap-3 text-sm text-[#A9ADA2]">
-            <MapPin size={16} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
+            <MapPin size={16} className="text-[#6C8C17] shrink-0 mt-0.5" />
             <div>
               <strong className="text-white block">Free delivery areas</strong>
               <small className="text-xs text-[#A9ADA2]">{settings.deliveryAreas}</small>
             </div>
           </div>
           <div className="flex items-start gap-3 text-sm text-[#A9ADA2]">
-            <ShieldCheck size={16} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
+            <ShieldCheck size={16} className="text-[#6C8C17] shrink-0 mt-0.5" />
             <div>
               <strong className="text-white block">Payment</strong>
               <small className="text-xs text-[#A9ADA2]">{settings.paymentMethod}</small>

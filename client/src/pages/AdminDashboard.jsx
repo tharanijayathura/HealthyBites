@@ -684,7 +684,7 @@ export default function AdminDashboard() {
               <span>All Menu Dishes ({meals.length})</span>
             </h2>
 
-            <div className="space-y-4 max-h-[780px] overflow-y-auto pr-1">
+            <div className="space-y-4 max-h-195 overflow-y-auto pr-1">
               {meals.map(meal => (
                 <div
                   key={meal._id}
@@ -694,7 +694,7 @@ export default function AdminDashboard() {
                     <img
                       src={meal.imageUrl || '/images/food/1.png'}
                       alt={meal.name}
-                      className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-[#2C3821]"
+                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#2C3821]"
                       onError={(e) => { e.target.src = '/images/food/1.png'; }}
                     />
                     <div>
@@ -776,7 +776,7 @@ export default function AdminDashboard() {
                           <img
                             src={m.imageUrl || '/images/food/1.png'}
                             alt={m.name}
-                            className="w-7 h-7 rounded object-cover flex-shrink-0"
+                            className="w-7 h-7 rounded object-cover shrink-0"
                             onError={(e) => { e.target.src = '/images/food/1.png'; }}
                           />
                           <span className="truncate flex-1 text-white">{m.name}</span>
@@ -940,7 +940,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Search Box */}
-            <div className="admin-order-search relative min-w-[260px]">
+            <div className="admin-order-search relative min-w-65">
               <input
                 type="text"
                 className="form-control text-xs pl-9 mb-0"
@@ -1034,7 +1034,7 @@ export default function AdminDashboard() {
                             <><Truck size={14} className="text-[#6C8C17]" /> Delivery</>
                           )}
                         </div>
-                        <div className="text-white break-words">{order.customer.address}</div>
+                        <div className="text-white wrap-break-word">{order.customer.address}</div>
                         {order.customer.deliveryTime && (
                           <div className="text-[#D8BE8C] mt-1">Slot: {order.customer.deliveryTime}</div>
                         )}
