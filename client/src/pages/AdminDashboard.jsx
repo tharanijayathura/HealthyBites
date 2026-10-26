@@ -74,6 +74,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [superAnalytics, setSuperAnalytics] = useState(null);
   const [admins, setAdmins] = useState([]);
+  const [users, setUsers] = useState([]);
   const [settings, setSettings] = useState({
     businessName: 'Healy Bite',
     tagline: 'Fuel Your Fitness. Nourish Your Body.',
@@ -82,7 +83,10 @@ export default function AdminDashboard() {
     whatsappNumber: '',
     deliveryFee: 250,
     pickupLocation: 'Healy Bite Hub, Colombo 03, Sri Lanka',
-    cutoffTime: '8:00 PM',
+    cutoffTime: '11:00 PM',
+    orderThrough: 'Wholesome, delicious meals made to nourish your body and power your day.',
+    deliveryAreas: 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala',
+    paymentMethod: 'COD only',
     description: ''
   });
 
@@ -97,14 +101,15 @@ export default function AdminDashboard() {
 
   const refreshData = async () => {
     try {
-      const [mealsRes, ordersRes, settingsRes, statsRes, analyticsRes, superAnalyticsRes, adminsRes] = await Promise.all([
+      const [mealsRes, ordersRes, settingsRes, statsRes, analyticsRes, superAnalyticsRes, adminsRes, usersRes] = await Promise.all([
         get('/admin/meals'),
         get('/admin/orders'),
         get('/admin/settings'),
         get('/admin/stats').catch(() => null),
         get('/admin/analytics').catch(() => null),
         get('/admin/super-analytics').catch(() => null),
-        get('/admin/admins').catch(() => [])
+        get('/admin/admins').catch(() => []),
+        get('/admin/users').catch(() => [])
       ]);
       setMeals(mealsRes || []);
       setOrders(ordersRes || []);
@@ -113,6 +118,7 @@ export default function AdminDashboard() {
       if (analyticsRes) setAnalytics(analyticsRes);
       if (superAnalyticsRes) setSuperAnalytics(superAnalyticsRes);
       setAdmins(adminsRes || []);
+      setUsers(usersRes || []);
     } catch (err) {
       setError(err.message || 'Error refreshing dashboard data');
     }
@@ -157,6 +163,17 @@ export default function AdminDashboard() {
       showNotification('Administrator approved successfully.');
     } catch (err) {
       setError(err.message || 'Could not approve administrator.');
+    }
+  };
+
+  const handleRemoveUser = async (user) => {
+    if (!window.confirm(`Remove customer account for ${user.name}? Their order history will be preserved.`)) return;
+    try {
+      await del(`/admin/users/${user._id}`);
+      await refreshData();
+      showNotification('Customer account removed.');
+    } catch (err) {
+      setError(err.message || 'Could not remove customer account.');
     }
   };
 
@@ -393,6 +410,7 @@ export default function AdminDashboard() {
           ['orders', `Orders (${orders.length})`],
           ['settings', 'Business Settings'],
           ...(admin?.role === 'superadmin' ? [
+            ['users', `Customers (${users.length})`],
             ['team', admins.filter(a => a.status === 'pending').length > 0
               ? `Admin Approvals (${admins.filter(a => a.status === 'pending').length} Pending!)`
               : 'Admin Approvals'
@@ -1124,6 +1142,37 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {activeTab === 'users' && admin?.role === 'superadmin' && (
+        <div className="bg-[#1A2110] border border-[#2C3821] rounded-2xl p-6">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <span className="eyebrow">SUPER ADMIN ONLY</span>
+              <h2 className="text-xl font-bold mb-1">Registered customers</h2>
+              <p className="text-sm text-[#A9ADA2]">
+                Remove customer accounts while preserving their order history.
+              </p>
+            </div>
+            <ShieldCheck size={28} className="text-[#6C8C17]" />
+          </div>
+          <div className="space-y-3">
+            {users.length === 0 ? (
+              <p className="text-sm text-[#A9ADA2] py-6 text-center">No registered customers found.</p>
+            ) : users.map((user) => (
+              <div key={user._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#090B01] border border-[#2C3821] rounded-xl p-4">
+                <div>
+                  <strong className="text-white">{user.name}</strong>
+                  <p className="text-xs text-[#A9ADA2] mt-1">{user.email}</p>
+                  <p className="text-xs text-[#A9ADA2] mt-1">{user.phone}</p>
+                </div>
+                <button type="button" className="btn btn-danger btn-sm" onClick={() => handleRemoveUser(user)}>
+                  <Trash2 size={14} /> Remove Customer
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* TAB 6: BUSINESS SETTINGS */}
       {activeTab === 'settings' && (
         <div className="max-w-2xl bg-[#1A2110] border border-[#2C3821] rounded-2xl p-8">
@@ -1221,6 +1270,36 @@ export default function AdminDashboard() {
                 placeholder="8:00 PM"
                 value={settings.cutoffTime}
                 onChange={(e) => setSettings({ ...settings, cutoffTime: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group mb-0">
+              <label>Order Through</label>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={settings.orderThrough}
+                onChange={(e) => setSettings({ ...settings, orderThrough: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group mb-0">
+              <label>Free Delivery Areas</label>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={settings.deliveryAreas}
+                onChange={(e) => setSettings({ ...settings, deliveryAreas: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group mb-0">
+              <label>Payment Method</label>
+              <input
+                type="text"
+                className="form-control"
+                value={settings.paymentMethod}
+                onChange={(e) => setSettings({ ...settings, paymentMethod: e.target.value })}
               />
             </div>
 

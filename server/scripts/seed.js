@@ -155,7 +155,10 @@ try {
       deliveryEnabled: true,
       pickupEnabled: true,
       pickupLocation: 'Healy Bite Hub, Colombo 03, Sri Lanka',
-      cutoffTime: '8:00 PM',
+      cutoffTime: '11:00 PM',
+      orderThrough: 'Wholesome, delicious meals made to nourish your body and power your day.',
+      deliveryAreas: 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala',
+      paymentMethod: 'COD only',
       description: 'Healy Bite delivers freshly prepared, macro-balanced nutritious meals designed for gym enthusiasts, athletes, and active professionals across Colombo.',
       blackoutDates: []
     },

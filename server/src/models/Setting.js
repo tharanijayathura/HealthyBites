@@ -12,6 +12,9 @@ const settingSchema = new mongoose.Schema({
   pickupEnabled: { type: Boolean, default: true },
   pickupLocation: { type: String, default: 'Healy Bite Hub, Colombo 03, Sri Lanka' },
   cutoffTime: { type: String, default: '8:00 PM' },
+  orderThrough: { type: String, default: 'Wholesome, delicious meals made to nourish your body and power your day.' },
+  deliveryAreas: { type: String, default: 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala' },
+  paymentMethod: { type: String, default: 'COD only' },
   description: { type: String, default: 'Freshly prepared, protein-rich gym meals crafted for fitness enthusiasts and athletes across Colombo.' },
   blackoutDates: [{ type: String }]
 }, { timestamps: true });

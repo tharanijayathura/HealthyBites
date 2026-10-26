@@ -9,7 +9,10 @@ export default function ContactPage() {
     phone: '0712599785',
     whatsappNumber: '94712599785',
     pickupLocation: 'Healy Bite Hub, Colombo 03, Sri Lanka',
-    cutoffTime: '8:00 PM'
+    cutoffTime: '11:00 PM',
+    orderThrough: 'Wholesome, delicious meals made to nourish your body and power your day.',
+    deliveryAreas: 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala',
+    paymentMethod: 'COD only'
   });
 
   const [inquiry, setInquiry] = useState({ name: '', phone: '', message: '' });
@@ -159,6 +162,10 @@ export default function ContactPage() {
                 <span>Meal Prep Schedule:</span>
                 <strong className="text-white">Cooked Fresh Every Morning</strong>
               </div>
+              <div className="flex justify-between gap-4">
+                <span>Payment:</span>
+                <strong className="text-white text-right">{settings.paymentMethod}</strong>
+              </div>
             </div>
           </div>
 
@@ -167,10 +174,11 @@ export default function ContactPage() {
               <MapPin size={19} className="text-[#6C8C17]" /> Hub &amp; Delivery Zone
             </h3>
             <p className="text-sm text-[#A9ADA2] leading-relaxed mb-4">
-              Our central kitchen hub is situated in Colombo 03. We hand-deliver to homes, workplaces, and fitness studios across Colombo 01 through 15 and selected surrounding areas.
+              {settings.orderThrough}
             </p>
             <div className="text-xs text-[#D8BE8C] bg-[#090B01] p-3 rounded-xl border border-[#2C3821]">
-              Hub Address: <strong>{settings.pickupLocation}</strong>
+              <div className="mb-2">Free delivery areas: <strong>{settings.deliveryAreas}</strong></div>
+              <div>Hub Address: <strong>{settings.pickupLocation}</strong></div>
             </div>
           </div>
         </div>

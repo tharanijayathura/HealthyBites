@@ -1,8 +1,21 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MessageCircle, MapPin, Clock, ShieldCheck } from 'lucide-react';
 import BrandLogo from './BrandLogo';
+import { get } from '../api/client';
 
 export default function Footer() {
+  const [settings, setSettings] = useState({
+    cutoffTime: '11:00 PM',
+    orderThrough: 'Wholesome, delicious meals made to nourish your body and power your day.',
+    deliveryAreas: 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala',
+    paymentMethod: 'COD only'
+  });
+
+  useEffect(() => {
+    get('/settings').then(data => setSettings(current => ({ ...current, ...data }))).catch(() => {});
+  }, []);
+
   return (
     <footer className="site-footer">
       <div className="container footer-main-grid">
@@ -10,7 +23,7 @@ export default function Footer() {
         <div className="footer-col">
           <BrandLogo className="mb-4" />
           <p className="mb-4">
-            Fuel Your Fitness. Nourish Your Body. Freshly prepared, protein-dense meals designed specifically for athletes, gym-goers, and active individuals in Colombo.
+            {settings.orderThrough}
           </p>
           <div className="inline-flex items-center gap-2 text-xs text-[#DDE8CB] bg-[#1A2110] border border-[#2C3821] px-3 py-1.5 rounded-full">
             <ShieldCheck size={14} className="text-[#6C8C17]" />
@@ -37,15 +50,22 @@ export default function Footer() {
           <div className="flex items-start gap-3 text-sm text-[#A9ADA2] mb-3">
             <Clock size={16} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
             <div>
-              <strong className="text-white block">Cutoff: 8:00 PM</strong>
-              <small className="text-xs text-[#A9ADA2]">Orders must be placed by 8:00 PM for next scheduled day deliveries.</small>
+              <strong className="text-white block">Cutoff: {settings.cutoffTime}</strong>
+              <small className="text-xs text-[#A9ADA2]">Orders must be placed by {settings.cutoffTime} for the next scheduled day deliveries.</small>
             </div>
           </div>
           <div className="flex items-start gap-3 text-sm text-[#A9ADA2]">
             <MapPin size={16} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
             <div>
-              <strong className="text-white block">Colombo Kitchen Hub</strong>
-              <small className="text-xs text-[#A9ADA2]">Colombo 03 &amp; greater Colombo delivery zones.</small>
+              <strong className="text-white block">Free delivery areas</strong>
+              <small className="text-xs text-[#A9ADA2]">{settings.deliveryAreas}</small>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 text-sm text-[#A9ADA2]">
+            <ShieldCheck size={16} className="text-[#6C8C17] flex-shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block">Payment</strong>
+              <small className="text-xs text-[#A9ADA2]">{settings.paymentMethod}</small>
             </div>
           </div>
         </div>

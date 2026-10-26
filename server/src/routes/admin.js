@@ -232,6 +232,20 @@ router.delete('/admins/:id', requireSuperAdmin, asyncRoute(async (req, res) => {
   res.json({ message: 'Admin removed successfully.' });
 }));
 
+router.get('/users', requireSuperAdmin, asyncRoute(async (_req, res) => {
+  const users = await User.find().select('-passwordHash').sort({ createdAt: -1 }).lean();
+  res.json(users);
+}));
+
+router.delete('/users/:id', requireSuperAdmin, asyncRoute(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid user ID' });
+  const user = await User.findByIdAndDelete(req.params.id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  await Order.updateMany({ user: user._id }, { $set: { user: null } });
+  res.json({ message: 'Customer account removed successfully.' });
+}));
+
 // 7. Dashboard Overview Stats & Rich Analytics
 router.get('/stats', asyncRoute(async (_req, res) => {
   const [meals, orders, totalUsers] = await Promise.all([
@@ -526,6 +540,9 @@ router.put('/settings', asyncRoute(async (req, res) => {
     deliveryFee,
     pickupLocation,
     cutoffTime,
+    orderThrough,
+    deliveryAreas,
+    paymentMethod,
     description,
     blackoutDates,
     deliveryEnabled,
@@ -563,6 +580,9 @@ router.put('/settings', asyncRoute(async (req, res) => {
       deliveryFee: fee,
       pickupLocation: String(pickupLocation || 'Healy Bite Hub, Colombo 03, Sri Lanka').trim(),
       cutoffTime: String(cutoffTime || '8:00 PM').trim(),
+      orderThrough: String(orderThrough || 'Wholesome, delicious meals made to nourish your body and power your day.').trim(),
+      deliveryAreas: String(deliveryAreas || 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala').trim(),
+      paymentMethod: String(paymentMethod || 'COD only').trim(),
       description: String(description || '').trim(),
       blackoutDates: Array.isArray(blackoutDates) ? blackoutDates : [],
       deliveryEnabled: deliveryEnabled !== false,

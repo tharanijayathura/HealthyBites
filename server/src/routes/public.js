@@ -52,6 +52,9 @@ router.get('/settings', asyncRoute(async (_req, res) => {
     pickupEnabled: settings?.pickupEnabled ?? true,
     pickupLocation: settings?.pickupLocation || 'Healy Bite Hub, Colombo 03, Sri Lanka',
     cutoffTime: settings?.cutoffTime || '8:00 PM',
+    orderThrough: settings?.orderThrough || 'Wholesome, delicious meals made to nourish your body and power your day.',
+    deliveryAreas: settings?.deliveryAreas || 'Moratuwa, Rawathawatta, Katubedda, Angulana, Rathmalana, Suwarapola, Piliyandala',
+    paymentMethod: settings?.paymentMethod || 'COD only',
     description: settings?.description || 'Freshly prepared, protein-rich gym meals crafted for fitness enthusiasts and athletes across Colombo.',
     blackoutDates: settings?.blackoutDates || []
   });
