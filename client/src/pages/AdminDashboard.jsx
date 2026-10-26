@@ -324,7 +324,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="container section-py">
+    <main className="container section-py admin-dashboard">
       {/* Top Bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#2C3821]">
         <div>
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="admin-top-actions flex items-center gap-3">
           <button
             type="button"
             className="btn btn-outline btn-sm"
@@ -420,7 +420,7 @@ export default function AdminDashboard() {
           <button
             key={id}
             type="button"
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+            className={`admin-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
               activeTab === id
                 ? 'bg-[#6C8C17] text-[#090B01] font-bold shadow-lg'
                 : 'bg-[#1A2110] text-[#A9ADA2] hover:text-white'
@@ -940,7 +940,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Search Box */}
-            <div className="relative min-w-[260px]">
+            <div className="admin-order-search relative min-w-[260px]">
               <input
                 type="text"
                 className="form-control text-xs pl-9 mb-0"
@@ -970,7 +970,7 @@ export default function AdminDashboard() {
                 return (
                   <div
                     key={order._id}
-                    className="bg-[#1A2110] border border-[#2C3821] rounded-2xl p-6 transition-all hover:border-[#4D642C]"
+                    className="admin-order-card bg-[#1A2110] border border-[#2C3821] rounded-2xl p-6 transition-all hover:border-[#4D642C]"
                   >
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-4 mb-4 border-b border-[#2C3821] gap-4">
                       <div>
@@ -1064,7 +1064,7 @@ export default function AdminDashboard() {
                       </span>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                         {order.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2 rounded bg-[#141A0D] border border-[#2C3821]">
+                          <div key={idx} className="admin-order-item flex items-center justify-between gap-3 p-2 rounded bg-[#141A0D] border border-[#2C3821]">
                             <div>
                               <strong className="text-white">{item.quantity} × {item.name}</strong>
                               <small className="block text-[#A9ADA2] text-[10px]">Date: {item.deliveryDate}</small>

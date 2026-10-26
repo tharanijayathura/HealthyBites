@@ -84,7 +84,7 @@ export default function CartPage() {
                   {groupedItems[date].map(item => (
                     <article
                       key={item.key}
-                      className="flex items-center gap-4 py-3 border-b border-[#2C3821]/60 last:border-b-0"
+                      className="cart-item-row flex items-center gap-4 py-3 border-b border-[#2C3821]/60 last:border-b-0"
                     >
                       {/* Image / Thumbnail */}
                       <div className="w-20 h-20 rounded-xl overflow-hidden bg-[#090B01] border border-[#2C3821] flex-shrink-0">
@@ -97,7 +97,7 @@ export default function CartPage() {
                       </div>
 
                       {/* Details */}
-                      <div className="flex-1 min-w-0">
+                      <div className="cart-item-details flex-1 min-w-0">
                         <h4 className="text-sm md:text-base font-bold text-white mb-1 truncate">
                           {item.name}
                         </h4>
@@ -112,7 +112,7 @@ export default function CartPage() {
                       </div>
 
                       {/* Quantity & Controls */}
-                      <div className="flex flex-col items-end gap-2">
+                      <div className="cart-item-controls flex flex-col items-end gap-2">
                         <strong className="text-sm md:text-base text-[#DDE8CB]">
                           {money(item.price * item.quantity)}
                         </strong>

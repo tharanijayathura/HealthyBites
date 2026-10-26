@@ -254,11 +254,11 @@ export default function CustomerProfile() {
                   {/* Items */}
                   <div className="space-y-1.5 mb-3 text-xs">
                     {order.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-[#A9ADA2]">
-                        <span className="text-white">
+                      <div key={idx} className="profile-order-item flex justify-between gap-3 text-[#A9ADA2]">
+                        <span className="text-white min-w-0 break-words">
                           {item.quantity} × {item.name}
                         </span>
-                        <span>{money(item.price * item.quantity)}</span>
+                        <span className="flex-shrink-0">{money(item.price * item.quantity)}</span>
                       </div>
                     ))}
                   </div>
