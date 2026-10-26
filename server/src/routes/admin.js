@@ -78,64 +78,44 @@ router.post('/login', loginLimiter, asyncRoute(async (req, res) => {
   });
 }));
 
-// 2. Admin Registration (First-time setup OR with invitation key)
+// Staff registration creates a pending account. Only a super-admin can approve it.
 router.post('/register', loginLimiter, asyncRoute(async (req, res) => {
-  const name = String(req.body?.name || '').trim() || 'Admin';
+  const name = String(req.body?.name || '').trim();
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
-  const inviteCode = String(req.body?.inviteCode || '').trim();
 
+  if (!name || name.length > 80) {
+    return res.status(400).json({ message: 'Please enter your name.' });
+  }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ message: 'Valid email address is required' });
+    return res.status(400).json({ message: 'Valid email address is required.' });
   }
-  if (!password || password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
   }
-
-  const existingCount = await Admin.countDocuments();
-  const masterKey = process.env.ADMIN_REGISTRATION_KEY || 'HEALY_ADMIN_2026';
-  const isAutoApproved = existingCount === 0 || (inviteCode && inviteCode === masterKey);
-
-  const alreadyRegistered = await Admin.findOne({ email });
-  if (alreadyRegistered) {
-    return res.status(409).json({ message: 'An admin account with this email already exists' });
+  if (await Admin.findOne({ email })) {
+    return res.status(409).json({ message: 'An administrator with this email already exists.' });
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
   const admin = await Admin.create({
     name,
     email,
-    passwordHash,
-    role: existingCount === 0 ? 'superadmin' : 'admin',
-    status: isAutoApproved ? 'active' : 'pending',
-    lastLogin: null
+    passwordHash: await bcrypt.hash(password, 12),
+    role: 'admin',
+    status: 'pending'
   });
 
-  if (isAutoApproved) {
-    const token = jwt.sign(
-      { id: String(admin._id), role: admin.role || 'admin' },
-      process.env.JWT_SECRET,
-      { expiresIn: '8h', algorithm: 'HS256' }
-    );
-    res.cookie('hb_admin', token, cookieOptions);
-  }
-
   res.status(201).json({
+    pendingApproval: true,
     email: admin.email,
-    name: admin.name,
-    role: admin.role,
-    status: admin.status,
-    pendingApproval: admin.status === 'pending',
-    message: admin.status === 'pending'
-      ? 'Admin registration submitted! Awaiting Super Admin (healthyxxxbites@gmail.com) approval before login.'
-      : 'Admin account created successfully.'
+    message: 'Registration submitted. A super-admin must approve your staff account before you can sign in.'
   });
 }));
 
-// 3. Admin Logout
+// 2. Admin Logout
 router.post('/logout', (_req, res) => res.clearCookie('hb_admin', { ...cookieOptions, maxAge: undefined }).json({ ok: true }));
 
-// 4. Admin Current Session
+// 3. Admin Current Session
 router.get('/me', requireAdmin, asyncRoute(async (req, res) => {
   const admin = await Admin.findById(req.admin.id).select('-passwordHash').lean();
   if (!admin) return res.status(401).json({ message: 'Admin account not found' });
@@ -152,7 +132,7 @@ const requireSuperAdmin = (req, res, next) => {
   next();
 };
 
-// 5. Image Upload Endpoint for Admin
+// 4. Image Upload Endpoint for Admin
 router.post('/upload-image', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'Please upload an image file.' });
@@ -165,7 +145,7 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
   });
 });
 
-// 6. Admin Team Management
+// 5. Admin Team Management
 router.get('/admins', requireSuperAdmin, asyncRoute(async (_req, res) => {
   const admins = await Admin.find().select('-passwordHash').sort({ createdAt: -1 }).lean();
   res.json(admins);
@@ -299,6 +279,76 @@ router.get('/analytics', asyncRoute(async (_req, res) => {
     topDishes,
     orderTypes: { delivery: deliveryCount, pickup: pickupCount },
     revenueByStatus
+  });
+}));
+
+router.get('/super-analytics', asyncRoute(async (_req, res) => {
+  const [orders, users, admins, meals] = await Promise.all([
+    Order.find().select('createdAt total status items customer.orderType').sort({ createdAt: 1 }).lean(),
+    User.countDocuments(),
+    Admin.countDocuments(),
+    Meal.countDocuments()
+  ]);
+
+  const completedStatuses = new Set(['confirmed', 'preparing', 'completed']);
+  const validOrders = orders.filter(order => order.status !== 'cancelled');
+  const verifiedOrders = orders.filter(order => completedStatuses.has(order.status));
+  const totalRevenue = verifiedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const totalPortions = validOrders.reduce(
+    (sum, order) => sum + (order.items || []).reduce((itemSum, item) => itemSum + (item.quantity || 0), 0),
+    0
+  );
+
+  const dateKey = (date, type) => {
+    const value = new Date(date);
+    if (type === 'year') return String(value.getFullYear());
+    if (type === 'month') return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
+    if (type === 'week') {
+      const start = new Date(value);
+      const day = start.getDay() || 7;
+      start.setDate(start.getDate() - day + 1);
+      return start.toISOString().slice(0, 10);
+    }
+    return value.toISOString().slice(0, 10);
+  };
+
+  const buildSeries = (type, count) => {
+    const now = new Date();
+    const keys = [];
+    for (let index = count - 1; index >= 0; index -= 1) {
+      const date = new Date(now);
+      if (type === 'day') date.setDate(now.getDate() - index);
+      if (type === 'week') date.setDate(now.getDate() - index * 7);
+      if (type === 'month') date.setMonth(now.getMonth() - index);
+      if (type === 'year') date.setFullYear(now.getFullYear() - index);
+      keys.push(dateKey(date, type));
+    }
+    return keys.map(key => {
+      const matching = validOrders.filter(order => dateKey(order.createdAt, type) === key);
+      const verified = matching.filter(order => completedStatuses.has(order.status));
+      return {
+        label: key,
+        orders: matching.length,
+        revenue: verified.reduce((sum, order) => sum + (order.total || 0), 0)
+      };
+    });
+  };
+
+  res.json({
+    totals: {
+      totalRevenue,
+      totalOrders: validOrders.length,
+      totalPortions,
+      registeredCustomers: users,
+      administratorAccounts: admins,
+      meals
+    },
+    series: {
+      daily: buildSeries('day', 7),
+      weekly: buildSeries('week', 8),
+      monthly: buildSeries('month', 12),
+      yearly: buildSeries('year', 5)
+    }
   });
 }));
 

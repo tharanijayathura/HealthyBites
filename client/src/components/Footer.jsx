@@ -79,9 +79,9 @@ export default function Footer() {
           <span>Fresh Weekly Nutrition</span>
           <span>•</span>
           <Link to="/contact" className="hover:text-white">Contact</Link>
-          <span>•</span>
-          <Link to="/admin" className="text-[#6C8C17] hover:underline">
-            Admin Dashboard
+          <span aria-hidden="true">•</span>
+          <Link to="/admin/register" className="text-[#A9ADA2] hover:text-white transition-colors">
+            Staff access
           </Link>
         </div>
       </div>

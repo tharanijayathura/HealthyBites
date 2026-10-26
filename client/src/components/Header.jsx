@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Menu, X, User, LogIn, Shield, LogOut } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,8 @@ import BrandLogo from './BrandLogo';
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const { itemCount } = useCart();
   const { user, admin, logoutCustomer, loading } = useAuth();
   const location = useLocation();
@@ -16,7 +18,10 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+      setHeaderHidden(currentScrollY > lastScrollY.current && currentScrollY > 80);
+      lastScrollY.current = currentScrollY;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -32,7 +37,7 @@ export default function Header() {
   };
 
   return (
-    <header className={`site-header ${scrolled ? 'header-scrolled shadow-2xl' : ''}`}>
+    <header className={`site-header ${scrolled ? 'header-scrolled shadow-2xl' : ''} ${headerHidden ? 'header-hidden' : ''}`}>
       <div className="container nav-wrap">
         {/* Brand Logo */}
         <BrandLogo />
@@ -74,7 +79,7 @@ export default function Header() {
           )}
 
           {/* User Auth Pill */}
-          {!isAdminRoute && (
+          {!isAdminRoute && !admin && (
             <>
               {loading ? (
                 <div className="w-8 h-8 rounded-full bg-[#1A2110] animate-pulse" />
@@ -174,7 +179,7 @@ export default function Header() {
                 <LogOut size={14} /> Sign Out
               </button>
             </div>
-          ) : (
+          ) : !admin ? (
             <div className="pt-3 border-t border-[#2C3821] flex items-center justify-between">
               <Link to="/login" className="btn btn-primary btn-sm text-xs">
                 Customer Sign In
@@ -183,7 +188,7 @@ export default function Header() {
                 Create Account
               </Link>
             </div>
-          )}
+          ) : null}
 
           <div className="pt-2 border-t border-[#2C3821] flex items-center justify-between">
             <span className="text-xs text-[#A9ADA2]">Staff Access</span>

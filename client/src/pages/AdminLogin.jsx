@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { post } from '../api/client';
@@ -35,7 +34,7 @@ export default function AdminLogin() {
       <div className="auth-card w-full max-w-md rounded-[2rem] p-7 md:p-10">
         <div className="relative text-center mb-8">
           <div className="auth-icon w-16 h-16 rounded-2xl border flex items-center justify-center text-[#6C8C17] mx-auto mb-5">
-            <img src="/images/logo.jpeg" alt="Healthy Bite logo" className="auth-logo-image" />
+            <img src="/images/logo.png" alt="Healthy Bite logo" className="auth-logo-image" />
           </div>
           <span className="eyebrow justify-center">STAFF PORTAL</span>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">Welcome to <span className="brand-leaf">Control.</span></h1>
@@ -100,14 +99,6 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="relative mt-8 pt-5 border-t border-[#2C3821] text-center text-xs text-[#A9ADA2] space-y-2">
-          <div>
-            New administrator?{' '}
-            <Link to="/admin/register" className="text-[#6C8C17] font-semibold hover:underline">
-              Register an Admin Account
-            </Link>
-          </div>
-        </div>
       </div>
     </main>
   );

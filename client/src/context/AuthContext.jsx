@@ -34,9 +34,14 @@ export function AuthProvider({ children }) {
 
   const loginCustomer = async (email, password) => {
     const res = await post('/auth/login', { email, password });
+    if (res?.admin) {
+      setAdmin(res.admin);
+      setUser(null);
+      return { admin: res.admin };
+    }
     if (res?.user) {
       setUser(res.user);
-      return res.user;
+      return { user: res.user };
     }
     throw new Error('Login failed');
   };

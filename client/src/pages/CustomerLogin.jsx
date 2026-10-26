@@ -22,8 +22,8 @@ export default function CustomerLogin() {
     setLoading(true);
 
     try {
-      await loginCustomer(email.trim(), password);
-      navigate(redirectPath, { replace: true });
+      const account = await loginCustomer(email.trim(), password);
+      navigate(account?.admin ? '/admin' : redirectPath, { replace: true });
     } catch (err) {
       setError(err.message || 'Invalid email or password.');
     } finally {
@@ -36,7 +36,7 @@ export default function CustomerLogin() {
       <div className="auth-card w-full max-w-md rounded-[2rem] p-7 md:p-10">
         <div className="relative text-center mb-8">
           <div className="auth-icon w-16 h-16 rounded-2xl border flex items-center justify-center text-[#6C8C17] mx-auto mb-5">
-            <img src="/images/logo.jpeg" alt="Healthy Bite logo" className="auth-logo-image" />
+            <img src="/images/logo.png" alt="Healthy Bite logo" className="auth-logo-image" />
           </div>
           <span className="eyebrow justify-center">WELCOME BACK, ATHLETE</span>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">Fuel your next <span className="brand-leaf">win.</span></h1>

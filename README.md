@@ -73,8 +73,6 @@ CLIENT_ORIGIN=http://localhost:5173
 JWT_SECRET=your_32_character_random_jwt_secret
 ADMIN_EMAIL=healthyxxxbites@gmail.com
 ADMIN_PASSWORD=your_strong_admin_password
-# Required when registering additional admin accounts after the first one:
-ADMIN_REGISTRATION_KEY=your_private_admin_invitation_key
 ```
 
 **Client (`client/.env`):**
@@ -97,10 +95,14 @@ npm run seed --prefix server
 npm run admin:create --prefix server
 ```
 
-The first administrator can also be created at `/admin/register`. Once an administrator
-exists, additional administrator registrations require the private `ADMIN_REGISTRATION_KEY`
-environment variable and must be approved by the super-admin in the Admin Team tab.
-Never expose this key in the client application.
+The customer registration form creates normal customer accounts only. Staff can request
+an administrator account from the discreet `staff` link in the footer or at
+`/admin/register`. Every staff request starts as pending and must be approved by a
+super-admin in the Admin Team tab before the staff member can sign in through the
+normal `/login` page. Approved staff are sent to the admin dashboard; customer
+accounts continue to be sent to the menu. The
+`admin:create` command creates or updates the configured super-admin using credentials
+from `server/.env`.
 
 ### 5. Start Development Servers
 Run both frontend and backend concurrently:
@@ -110,7 +112,7 @@ npm run dev
 
 - **Customer Website**: [http://localhost:5173](http://localhost:5173)
 - **API Health Check**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
-- **Admin Portal**: [http://localhost:5173/admin](http://localhost:5173/admin)
+- **Admin Portal**: [http://localhost:5173/admin/login](http://localhost:5173/admin/login)
 
 ### 6. Run Tests
 ```bash

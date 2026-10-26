@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [superAnalytics, setSuperAnalytics] = useState(null);
   const [admins, setAdmins] = useState([]);
   const [settings, setSettings] = useState({
     businessName: 'Healy Bite',
@@ -96,12 +97,13 @@ export default function AdminDashboard() {
 
   const refreshData = async () => {
     try {
-      const [mealsRes, ordersRes, settingsRes, statsRes, analyticsRes, adminsRes] = await Promise.all([
+      const [mealsRes, ordersRes, settingsRes, statsRes, analyticsRes, superAnalyticsRes, adminsRes] = await Promise.all([
         get('/admin/meals'),
         get('/admin/orders'),
         get('/admin/settings'),
         get('/admin/stats').catch(() => null),
         get('/admin/analytics').catch(() => null),
+        get('/admin/super-analytics').catch(() => null),
         get('/admin/admins').catch(() => [])
       ]);
       setMeals(mealsRes || []);
@@ -109,6 +111,7 @@ export default function AdminDashboard() {
       setSettings(s => ({ ...s, ...(settingsRes || {}) }));
       if (statsRes) setStats(statsRes);
       if (analyticsRes) setAnalytics(analyticsRes);
+      if (superAnalyticsRes) setSuperAnalytics(superAnalyticsRes);
       setAdmins(adminsRes || []);
     } catch (err) {
       setError(err.message || 'Error refreshing dashboard data');
@@ -773,6 +776,68 @@ export default function AdminDashboard() {
       {/* TAB 3: ORDER MANAGEMENT */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
+          {superAnalytics && (
+            <div className="bg-[#1A2110] border border-[#6C8C17] rounded-2xl p-6">
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <div>
+                  <span className="eyebrow">BUSINESS OVERVIEW</span>
+                  <h2 className="text-xl font-bold mt-1">Executive Analytics</h2>
+                  <p className="text-sm text-[#A9ADA2] mt-1">
+                    Business performance across orders, revenue, customers, meals, and staff.
+                  </p>
+                </div>
+                <ShieldCheck className="text-[#6C8C17]" size={28} />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
+                {[
+                  ['Verified Revenue', money(superAnalytics.totals.totalRevenue)],
+                  ['Orders', superAnalytics.totals.totalOrders],
+                  ['Portions Sold', superAnalytics.totals.totalPortions],
+                  ['Customers', superAnalytics.totals.registeredCustomers],
+                  ['Staff Accounts', superAnalytics.totals.administratorAccounts],
+                  ['Meals', superAnalytics.totals.meals]
+                ].map(([label, value]) => (
+                  <div key={label} className="bg-[#090B01] border border-[#2C3821] rounded-xl p-3">
+                    <span className="stat-label">{label}</span>
+                    <strong className="block text-lg mt-2 text-[#DDE8CB]">{value}</strong>
+                  </div>
+                ))}
+              </div>
+
+              {[
+                ['daily', 'Daily — last 7 days'],
+                ['weekly', 'Weekly — last 8 weeks'],
+                ['monthly', 'Monthly — last 12 months'],
+                ['yearly', 'Yearly — last 5 years']
+              ].map(([key, title]) => {
+                const points = superAnalytics.series?.[key] || [];
+                const maxRevenue = Math.max(...points.map(point => point.revenue), 1);
+                return (
+                  <div key={key} className="bg-[#090B01] border border-[#2C3821] rounded-xl p-4 mb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold">{title}</h3>
+                      <span className="text-xs text-[#A9ADA2]">Verified revenue</span>
+                    </div>
+                    <div className="flex items-end gap-2 h-36">
+                      {points.map(point => (
+                        <div key={point.label} className="flex-1 h-full flex flex-col justify-end items-center gap-2 min-w-0">
+                          <span className="text-[10px] text-[#D8BE8C] truncate max-w-full">{money(point.revenue)}</span>
+                          <div
+                            className="w-full max-w-12 rounded-t-md bg-[#6C8C17] min-h-1 transition-all"
+                            style={{ height: `${Math.max((point.revenue / maxRevenue) * 100, point.revenue ? 5 : 1)}%` }}
+                            title={`${point.label}: ${money(point.revenue)}, ${point.orders} orders`}
+                          />
+                          <span className="text-[10px] text-[#A9ADA2] truncate max-w-full">{point.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="bg-[#1A2110] border border-[#2C3821] rounded-2xl p-6">
             <div className="flex items-center justify-between gap-4 mb-6">
               <div>

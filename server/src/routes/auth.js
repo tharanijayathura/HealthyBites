@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { rateLimit } from 'express-rate-limit';
 import User from '../models/User.js';
 import Order from '../models/Order.js';
+import Admin from '../models/Admin.js';
 
 const router = Router();
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -94,6 +95,36 @@ router.post('/login', authLimiter, asyncRoute(async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Please enter your email and password.' });
+  }
+
+  const admin = await Admin.findOne({ email });
+  if (admin) {
+    if (admin.status === 'pending') {
+      return res.status(403).json({ message: 'Your staff account is awaiting super-admin approval.' });
+    }
+    if (!(await bcrypt.compare(password, admin.passwordHash))) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    const token = jwt.sign(
+      { id: String(admin._id), role: admin.role || 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h', algorithm: 'HS256' }
+    );
+    admin.lastLogin = new Date();
+    await admin.save();
+
+    return res.cookie('hb_admin', token, {
+      ...cookieOptions,
+      maxAge: 8 * 60 * 60 * 1000
+    }).json({
+      admin: {
+        id: String(admin._id),
+        email: admin.email,
+        name: admin.name || 'Administrator',
+        role: admin.role || 'admin'
+      }
+    });
   }
 
   const user = await User.findOne({ email });

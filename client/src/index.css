@@ -423,7 +423,11 @@ img {
   background: rgba(9, 11, 1, 0.88);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(108, 140, 23, 0.18);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.site-header.header-hidden {
+  transform: translateY(-100%);
 }
 
 .nav-wrap {

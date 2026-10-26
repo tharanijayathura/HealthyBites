@@ -54,7 +54,7 @@ export default function CustomerRegister() {
       <div className="auth-card w-full max-w-lg rounded-[2rem] p-7 md:p-10">
         <div className="relative text-center mb-8">
           <div className="auth-icon w-16 h-16 rounded-2xl border flex items-center justify-center text-[#6C8C17] mx-auto mb-5">
-            <img src="/images/logo.jpeg" alt="Healthy Bite logo" className="auth-logo-image" />
+            <img src="/images/logo.png" alt="Healthy Bite logo" className="auth-logo-image" />
           </div>
           <span className="eyebrow justify-center">JOIN HEALY BITE</span>
           <h1 className="text-3xl md:text-4xl font-bold mb-3">Start eating <span className="brand-leaf">better.</span></h1>
@@ -227,6 +227,12 @@ export default function CustomerRegister() {
           <Link to="/login" className="text-[#6C8C17] font-semibold hover:underline">
             Sign In here
           </Link>
+          <div className="mt-4">
+            Staff member?{' '}
+            <Link to="/admin/register" className="text-[#6C8C17] font-semibold hover:underline">
+              Request staff access
+            </Link>
+          </div>
         </div>
       </div>
     </main>
