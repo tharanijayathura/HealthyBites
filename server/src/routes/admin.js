@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import multer from 'multer';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -17,6 +18,9 @@ import { requireAdmin } from '../middleware/auth.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.join(__dirname, '../../../client/public/images/uploads');
+const s3Bucket = process.env.AWS_S3_BUCKET;
+const s3Region = process.env.AWS_REGION;
+const s3Client = s3Bucket && s3Region ? new S3Client({ region: s3Region }) : null;
 
 // Ensure upload directory exists
 if (!fs.existsSync(uploadDir)) {
@@ -33,7 +37,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-  storage,
+  storage: s3Client ? multer.memoryStorage() : storage,
   limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (/image\/(jpeg|jpg|png|webp|gif)/i.test(file.mimetype)) {
@@ -133,17 +137,37 @@ const requireSuperAdmin = (req, res, next) => {
 };
 
 // 4. Image Upload Endpoint for Admin
-router.post('/upload-image', upload.single('image'), (req, res) => {
+router.post('/upload-image', upload.single('image'), asyncRoute(async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'Please upload an image file.' });
   }
+
+  if (s3Client) {
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const key = `meals/meal_${Date.now()}${ext}`;
+
+    await s3Client.send(new PutObjectCommand({
+      Bucket: s3Bucket,
+      Key: key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      CacheControl: 'public, max-age=31536000, immutable'
+    }));
+
+    return res.json({
+      success: true,
+      imageUrl: `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${key}`,
+      filename: key
+    });
+  }
+
   const relativePath = `/images/uploads/${req.file.filename}`;
   res.json({
     success: true,
     imageUrl: relativePath,
     filename: req.file.filename
   });
-});
+}));
 
 // 5. Admin Team Management
 router.get('/admins', requireSuperAdmin, asyncRoute(async (_req, res) => {
