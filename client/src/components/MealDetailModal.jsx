@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { X, Plus, Minus, ShoppingBag, Flame, Dumbbell, Wheat, Droplet, AlertCircle, Check, Lock } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Flame, Dumbbell, Wheat, Droplet, AlertCircle, Check } from 'lucide-react';
 import { money } from '../utils/money';
 import { formatDate } from '../utils/dates';
 import { useCart } from '../context/CartContext';
@@ -183,7 +183,7 @@ export default function MealDetailModal({ meal, deliveryDate, onClose }) {
                   'Sold Out'
                 ) : !user ? (
                   <>
-                    <Lock size={17} /> Sign In to Order ({money(meal.price * quantity)})
+                    <ShoppingBag size={17} /> Sign In to Order ({money(meal.price * quantity)})
                   </>
                 ) : (
                   <>

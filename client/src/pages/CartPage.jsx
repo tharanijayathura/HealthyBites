@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Minus, Plus, Trash2, ShoppingBag, Calendar, ShieldCheck, ArrowLeft, Lock } from 'lucide-react';
+import { ArrowRight, Minus, Plus, Trash2, ShoppingBag, Calendar, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/dates';
@@ -206,7 +206,7 @@ export default function CartPage() {
                   state={{ from: '/checkout', message: 'Please sign in to your Healy Bite account to place your order.' }}
                   className="btn btn-primary btn-lg btn-block"
                 >
-                  <Lock size={17} /> Sign In to Order
+                  <ShoppingBag size={17} /> Sign In to Order
                 </Link>
                 <p className="text-[11px] text-[#A9ADA2] text-center">
                   Only signed-in members can complete checkout.

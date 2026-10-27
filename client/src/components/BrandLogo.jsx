@@ -6,7 +6,7 @@ export default function BrandLogo({ className = '' }) {
       <span className="brand-icon-box">
         <img src="/images/logo.png" alt="" className="brand-logo-image" />
       </span>
-      <span className="brand-wordmark">Healthy Bites</span>
+      <span className="brand-wordmark">Healthy Bite</span>
     </Link>
   );
 }

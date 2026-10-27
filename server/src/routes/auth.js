@@ -128,9 +128,17 @@ router.post('/login', authLimiter, asyncRoute(async (req, res) => {
   }
 
   const user = await User.findOne({ email });
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    return res.status(401).json({ message: 'Invalid email or password.' });
-  }
+    if (!user) {
+      return res.status(404).json({
+        message: 'No customer account was found for this email. Please create an account first.'
+      });
+    }
+
+    if (!(await bcrypt.compare(password, user.passwordHash))) {
+      return res.status(401).json({
+        message: 'The password is incorrect. Please check it and try again.'
+      });
+    }
 
   const token = jwt.sign(
     { id: String(user._id), role: 'customer' },

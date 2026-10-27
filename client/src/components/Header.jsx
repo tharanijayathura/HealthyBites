@@ -180,22 +180,16 @@ export default function Header() {
               </button>
             </div>
           ) : !admin ? (
-            <div className="pt-3 border-t border-[#2C3821] flex items-center justify-between">
+            <div className="mobile-auth-actions">
               <Link to="/login" className="btn btn-primary btn-sm text-xs">
                 Customer Sign In
               </Link>
-              <Link to="/register" className="text-xs text-[#DDE8CB] hover:underline">
+              <Link to="/register" className="mobile-register-link">
                 Create Account
               </Link>
             </div>
           ) : null}
 
-          <div className="pt-2 border-t border-[#2C3821] flex items-center justify-between">
-            <span className="text-xs text-[#A9ADA2]">Staff Access</span>
-            <Link to={admin ? '/admin' : '/admin/login'} className="text-xs text-[#6C8C17] hover:underline flex items-center gap-1">
-              <Shield size={12} /> {admin ? 'Dashboard' : 'Admin Login'}
-            </Link>
-          </div>
         </div>
       )}
     </header>

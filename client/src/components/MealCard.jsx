@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Eye, Flame, Dumbbell, Lock } from 'lucide-react';
+import { Plus, Eye, Flame, Dumbbell, ShoppingBag } from 'lucide-react';
 import { money } from '../utils/money';
 import { formatDate } from '../utils/dates';
 import { useCart } from '../context/CartContext';
@@ -107,7 +107,7 @@ export default function MealCard({ meal, deliveryDate }) {
               >
                 {!user ? (
                   <>
-                    <Lock size={14} />
+                    <ShoppingBag size={14} />
                     <span>Order</span>
                   </>
                 ) : (

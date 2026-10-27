@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Filter, Sparkles, AlertCircle } from 'lucide-react';
+import { Calendar, Sparkles } from 'lucide-react';
 import MealCard from '../components/MealCard';
 import { get } from '../api/client';
 import { demoMeals } from '../data/demoMeals';
@@ -21,7 +21,6 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState('All Meals');
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [previewNotice, setPreviewNotice] = useState(false);
 
   useEffect(() => {
     // When weekday changes, update default upcoming delivery date
@@ -40,12 +39,10 @@ export default function MenuPage() {
         if (active) {
           if (Array.isArray(result) && result.length > 0) {
             setMeals(result);
-            setPreviewNotice(false);
           } else {
             // Filter fallback
             const filtered = demoMeals.filter(m => m.availableDays.includes(day));
             setMeals(filtered);
-            setPreviewNotice(true);
           }
         }
       })
@@ -53,7 +50,6 @@ export default function MenuPage() {
         if (active) {
           const filtered = demoMeals.filter(m => m.availableDays.includes(day));
           setMeals(filtered);
-          setPreviewNotice(true);
         }
       })
       .finally(() => {
@@ -88,13 +84,6 @@ export default function MenuPage() {
         </p>
       </div>
 
-      {previewNotice && (
-        <div className="mb-6 p-4 rounded-xl bg-[#263117] border border-[#657539] text-[#DDE8CB] text-sm flex items-center gap-3">
-          <AlertCircle size={18} className="text-[#6C8C17] shrink-0" />
-          <span>Showing offline sample menu preview. Seeding MongoDB will connect live database meals.</span>
-        </div>
-      )}
-
       {/* Weekday Selector Tabs */}
       <div className="day-selector-wrap" role="tablist" aria-label="Select Weekday">
         {DAYS.map(d => (
@@ -115,11 +104,11 @@ export default function MenuPage() {
 
       {/* Sub-toolbar: Date Dropdown & Category Filter */}
       <div className="bg-[#1A2110] border border-[#2C3821] rounded-2xl p-5 mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="menu-date-control flex items-center gap-3">
           <Calendar size={18} className="text-[#6C8C17]" />
-          <span className="text-sm font-semibold text-[#DDE8CB]">Delivery Date for {day}:</span>
+          <span className="menu-date-label text-sm font-semibold text-[#DDE8CB]">Delivery Date for {day}:</span>
           <select
-            className="bg-[#090B01] border border-[#2C3821] text-white text-sm rounded-xl px-3 py-2 focus:border-[#6C8C17] outline-none"
+            className="form-control menu-date-select"
             value={deliveryDate || ''}
             onChange={(e) => setDeliveryDate(e.target.value)}
           >

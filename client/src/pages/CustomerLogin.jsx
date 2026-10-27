@@ -25,7 +25,11 @@ export default function CustomerLogin() {
       const account = await loginCustomer(email.trim(), password);
       navigate(account?.admin ? '/admin' : redirectPath, { replace: true });
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+        if (err.status >= 500) {
+          setError('We could not sign you in right now. Please try again in a moment.');
+        } else {
+          setError(err.message || 'We could not sign you in. Please check your details.');
+        }
     } finally {
       setLoading(false);
     }
